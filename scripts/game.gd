@@ -729,7 +729,7 @@ func _draw_help() -> void:
 		"Find the cache for improved armor and a stronger blade. Defeat both creatures.",
 		"E interacts with the scout, cache, and western road.",
 		"Accept the scout's contract, defeat both creatures, then return.",
-		"F5 saves locally. F9 loads. I opens your pack.",
+		"F5 saves locally. F9 loads. I opens your pack; K opens disciplines (1/2/3 to train).",
 		"ESC closes this page. F1 opens this manual."]
 	for i in range(lines.size()):
 		_text(lines[i], Vector2(320, 255 + i * 38), 16, Color("#c3c0a9"))
