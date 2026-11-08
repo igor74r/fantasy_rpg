@@ -16,5 +16,7 @@ jobs:
           version: 4.3.0
           use-dotnet: false
           include-templates: false
-      - name: Parse project and run progression smoke tests
+      - name: Import and parse project scripts
+        run: godot --headless --editor --path . --quit
+      - name: Run progression smoke tests
         run: godot --headless --path . --script res://tests/progression_smoke_test.gd
