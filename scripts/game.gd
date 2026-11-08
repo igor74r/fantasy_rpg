@@ -120,6 +120,7 @@ func _new_game() -> void:
 	contract_complete = false
 	contract_paid = false
 	explored.clear()
+	_mark_seen()
 	_log("You arrive at the Greyfen watchpost.")
 	_set_message("Find the scout. Something prowls in the eastern marsh.")
 
@@ -152,7 +153,6 @@ func _mark_seen() -> void:
 
 func _advance_turn() -> void:
 	turn += 1
-	player_guard = false
 	if enemy_alive:
 		var distance := absi(enemy_pos.x - player.x) + absi(enemy_pos.y - player.y)
 		if distance <= 1:
@@ -171,6 +171,7 @@ func _advance_turn() -> void:
 			var candidate := enemy_pos + step
 			if not _blocked(candidate) and candidate != player and candidate != scout_pos and candidate != cache_pos:
 				enemy_pos = candidate
+	player_guard = false
 	stamina = mini(max_stamina, stamina + 1)
 
 func _attack() -> void:
