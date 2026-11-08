@@ -31,6 +31,8 @@ A compact, self-contained expedition around the ruined watchpost of Greyfen:
 - V: heavy attack
 - T: trade near the scout
 - C: craft with gathered materials
+- K: open disciplines and spend skill points with keys 1/2/3
+- F1: field manual
 - F5: save; F9: load
 - Esc: close a panel / return to menu
 
@@ -38,7 +40,7 @@ A compact, self-contained expedition around the ruined watchpost of Greyfen:
 - The campaign links Greyfen Marsh, the Drowned Road, and Old Ironroot Mine. Each region resets its local contract and cache while retaining character progression.
 - Quartermaster trading converts crowns into healing draughts or bandage bundles near the scout.
 - Field crafting converts herbs and scrap into draughts or bandages. Caches replenish materials in each region.
-- Save format version 2 stores region and crafting resources while accepting version-1 saves.
+- Save format version 3 stores region, crafting resources, explored map cells, and discipline ranks while accepting version-1 and version-2 saves.
 
 ## Design boundaries
 This is the first complete vertical slice, not the full commercial-scale game. Future systems can add deeper injury locations, additional equipment slots, larger procedural regions, more enemy archetypes, and richer dialogue without breaking the playable loop.
