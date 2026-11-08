@@ -6,7 +6,7 @@ func _initialize() -> void:
 func _run_smoke_tests() -> void:
 	var game_script: Script = load("res://scripts/game.gd")
 	assert(game_script != null, "game script must load")
-	var game: Node2D = game_script.new()
+	var game: Variant = game_script.new()
 	root.add_child(game)
 	game._new_game()
 	assert(game.player_max_hp == 30, "fresh expedition resets max health")
