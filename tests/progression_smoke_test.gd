@@ -23,6 +23,9 @@ func _run_smoke_tests() -> void:
 	assert(game.bulwark_rank == 1 and game.armor_defense == 2, "Stone Bulwark applies armor")
 	assert(game.skill_points == 0, "training spends one point per rank")
 
+	game.player = Vector2i(8, 8)
+	game._interact()
+	assert(game.cache_open and game.armor_defense == 4, "cache armor upgrade preserves Stone Bulwark")
 	game.skill_points = 1
 	game._buy_skill(0)
 	assert(game.vitality_rank == 2 and game.player_max_hp == 40, "disciplines can reach rank two")
