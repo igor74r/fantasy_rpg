@@ -42,3 +42,11 @@ A compact, self-contained expedition around the ruined watchpost of Greyfen:
 
 ## Design boundaries
 This is the first complete vertical slice, not the full commercial-scale game. Future systems can add deeper injury locations, additional equipment slots, larger procedural regions, more enemy archetypes, and richer dialogue without breaking the playable loop.
+
+
+## Character disciplines (save format version 3)
+Level-ups award one spendable skill point. The K panel offers three passive disciplines, each capped at rank 2:
+- Iron Vitality: +5 maximum health per rank, immediately restoring the same amount.
+- Weapon Mastery: +1 weapon damage per rank for standard and heavy attacks.
+- Stone Bulwark: +1 armor defense per rank.
+Ranks and spent points persist in version-3 saves; older saves default all ranks to zero. Starting a genuinely new expedition resets level, attributes, and discipline ranks.
