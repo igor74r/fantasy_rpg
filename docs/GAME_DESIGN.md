@@ -11,7 +11,10 @@ A compact, self-contained expedition around the ruined watchpost of Greyfen:
 - Start a new run or load a local save.
 - Explore a bounded wilderness map from a top-down perspective.
 - Move one tile per action; hostile creatures react after player actions.
-- Engage a marsh scavenger with attack, guard, and stamina management.
+- Engage a Marsh Scavenger and then a tougher Mire Stalker with attack, heavy attack, guard, and stamina management.
+- Gain experience and levels; level-ups increase maximum health and stamina.
+- Loot improved weapon and armor from the supply cache; armor reduces incoming damage.
+- Survive bleeding wounds with bandages and healing draughts.
 - Search a supply cache for coins and a healing draught.
 - Speak to the Greyfen scout, accept a contract, defeat the scavenger, and return for a reward.
 - Use a healing draught, inspect inventory, save, and load.
@@ -28,4 +31,4 @@ A compact, self-contained expedition around the ruined watchpost of Greyfen:
 - Esc: close a panel / return to menu
 
 ## Design boundaries
-This is the first complete vertical slice, not the full commercial-scale game. Future systems can add injuries, equipment slots, crafting, larger procedural regions, more enemy archetypes, and richer dialogue without breaking the playable loop.
+This is the first complete vertical slice, not the full commercial-scale game. Future systems can add deeper injury locations, additional equipment slots, crafting, larger procedural regions, more enemy archetypes, and richer dialogue without breaking the playable loop.

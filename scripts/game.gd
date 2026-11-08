@@ -16,9 +16,22 @@ var stamina := 8
 var max_stamina := 8
 var coins := 0
 var potions := 1
+var bandages := 0
+var weapon_name := "Worn blade"
+var weapon_bonus := 0
+var armor_name := "Traveler's coat"
+var armor_defense := 1
+var experience := 0
+var level := 1
+var skill_points := 0
+var bleed_turns := 0
 var turn := 0
 var enemy_pos := Vector2i(13, 6)
 var enemy_hp := 18
+var enemy_max_hp := 18
+var enemy_name := "MARSH SCAVENGER"
+var enemy_power := 5
+var enemy_phase := 0
 var enemy_alive := true
 var enemy_guard := false
 var player_guard := false
@@ -97,6 +110,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			screen = Screen.INVENTORY
 			message = "Pack contents"
 		KEY_H: _use_potion()
+		KEY_B: _use_bandage()
+		KEY_V: _heavy_attack()
 		KEY_F5: _save_game()
 		KEY_F9: _load_game()
 		KEY_F1: screen = Screen.HELP
@@ -109,9 +124,22 @@ func _new_game() -> void:
 	stamina = max_stamina
 	coins = 0
 	potions = 1
+	bandages = 0
+	weapon_name = "Worn blade"
+	weapon_bonus = 0
+	armor_name = "Traveler's coat"
+	armor_defense = 1
+	experience = 0
+	level = 1
+	skill_points = 0
+	bleed_turns = 0
 	turn = 0
 	enemy_pos = Vector2i(13, 6)
 	enemy_hp = 18
+	enemy_max_hp = 18
+	enemy_name = "MARSH SCAVENGER"
+	enemy_power = 5
+	enemy_phase = 0
 	enemy_alive = true
 	enemy_guard = false
 	player_guard = false
@@ -157,9 +185,12 @@ func _advance_turn() -> void:
 		var distance := absi(enemy_pos.x - player.x) + absi(enemy_pos.y - player.y)
 		if distance <= 1:
 			if CombatRules.hit_chance(0.88):
-				var damage := CombatRules.enemy_damage(5, player_guard)
+				var damage := CombatRules.enemy_damage(enemy_power, player_guard, armor_defense)
 				player_hp -= damage
-				_log("Scavenger claws you for %d." % damage)
+				_log("%s hits you for %d." % [enemy_name.capitalize(), damage])
+				if enemy_power >= 7 and randf() < 0.28:
+					bleed_turns = maxi(bleed_turns, 3)
+					_log("The wound starts bleeding.")
 			else:
 				_log("The scavenger misses.")
 			if player_hp <= 0:
@@ -171,6 +202,13 @@ func _advance_turn() -> void:
 			var candidate := enemy_pos + step
 			if not _blocked(candidate) and candidate != player and candidate != scout_pos and candidate != cache_pos:
 				enemy_pos = candidate
+	if bleed_turns > 0 and player_hp > 0:
+		player_hp = maxi(0, player_hp - 1)
+		bleed_turns -= 1
+		_log("Bleeding: -1 health.")
+		if player_hp <= 0:
+			screen = Screen.DEAD
+			_log("You succumb to your wounds.")
 	player_guard = false
 	stamina = mini(max_stamina, stamina + 1)
 
@@ -187,18 +225,92 @@ func _attack() -> void:
 		return
 	stamina -= 2
 	if CombatRules.hit_chance(0.9):
-		var damage := CombatRules.player_damage(7, enemy_guard)
+		var damage := CombatRules.player_damage(7 + weapon_bonus, enemy_guard)
 		enemy_hp -= damage
 		_log("You strike the scavenger for %d." % damage)
 	else:
 		_log("Your strike cuts only mist.")
 	if enemy_hp <= 0:
 		enemy_hp = 0
-		enemy_alive = false
-		coins += 6
-		contract_complete = contract_accepted
-		_log("The scavenger falls. You collect 6 crowns.")
-		_set_message("Threat defeated. Return to the scout.")
+		coins += 6 + enemy_phase * 5
+		experience += 35 + enemy_phase * 25
+		_log("%s falls. You gain experience and loot." % enemy_name.capitalize())
+		_check_level_up()
+		if enemy_phase == 0:
+			enemy_phase = 1
+			enemy_name = "MIRE STALKER"
+			enemy_pos = Vector2i(17, 6)
+			enemy_hp = 26
+			enemy_max_hp = 26
+			enemy_power = 7
+			enemy_alive = true
+			_set_message("A larger shape rises from the black water!")
+			_log("A Mire Stalker emerges from the reeds.")
+		else:
+			enemy_alive = false
+			contract_complete = contract_accepted
+			_set_message("The marsh is quiet. Return to the scout.")
+	_advance_turn()
+
+func _heavy_attack() -> void:
+	if not enemy_alive:
+		_set_message("There is nothing left to strike.")
+		return
+	var distance := absi(enemy_pos.x - player.x) + absi(enemy_pos.y - player.y)
+	if distance > 1:
+		_set_message("Move adjacent to strike.")
+		return
+	if stamina < 4:
+		_set_message("A heavy strike requires 4 stamina.")
+		return
+	stamina -= 4
+	var damage := CombatRules.player_damage(12 + weapon_bonus, enemy_guard)
+	enemy_hp -= damage
+	_log("Heavy strike deals %d damage." % damage)
+	if enemy_hp <= 0:
+		enemy_hp = 0
+		coins += 6 + enemy_phase * 5
+		experience += 35 + enemy_phase * 25
+		_log("%s falls. You gain experience and loot." % enemy_name.capitalize())
+		_check_level_up()
+		if enemy_phase == 0:
+			enemy_phase = 1
+			enemy_name = "MIRE STALKER"
+			enemy_pos = Vector2i(17, 6)
+			enemy_hp = 26
+			enemy_max_hp = 26
+			enemy_power = 7
+			enemy_alive = true
+		else:
+			enemy_alive = false
+			contract_complete = contract_accepted
+	_advance_turn()
+
+func _check_level_up() -> void:
+	var threshold := level * 50
+	while experience >= threshold:
+		experience -= threshold
+		level += 1
+		skill_points += 1
+		player_max_hp += 4
+		max_stamina += 1
+		player_hp = mini(player_max_hp, player_hp + 4)
+		stamina = max_stamina
+		_log("LEVEL UP! You are now level %d." % level)
+		threshold = level * 50
+
+func _use_bandage() -> void:
+	if bandages <= 0:
+		_set_message("No bandages remain.")
+		return
+	if bleed_turns <= 0 and player_hp >= player_max_hp:
+		_set_message("You have no wounds to dress.")
+		return
+	bandages -= 1
+	bleed_turns = 0
+	var healed := mini(5, player_max_hp - player_hp)
+	player_hp += healed
+	_log("You dress your wounds and recover %d health." % healed)
 	_advance_turn()
 
 func _guard() -> void:
@@ -244,8 +356,13 @@ func _interact() -> void:
 				cache_open = true
 				coins += 4
 				potions += 1
-				_set_message("You find 4 crowns and a healing draught.")
-				_log("Supply cache looted: +4 crowns, +1 draught.")
+				bandages += 2
+				weapon_name = "Fen-forged sword"
+				weapon_bonus = 2
+				armor_name = "Marshguard coat"
+				armor_defense = 3
+				_set_message("You find a Fen-forged sword, Marshguard coat, draught and bandages.")
+				_log("Cache: upgraded weapon and armor, +1 draught, +2 bandages.")
 			_advance_turn()
 		"exit":
 			if contract_paid:
@@ -271,7 +388,10 @@ func _nearest_landmark() -> String:
 func _save_game() -> void:
 	var data := {
 		"player": [player.x, player.y], "hp": player_hp, "stamina": stamina,
-		"coins": coins, "potions": potions, "turn": turn,
+		"coins": coins, "potions": potions, "bandages": bandages, "turn": turn,
+		"weapon_name": weapon_name, "weapon_bonus": weapon_bonus, "armor_name": armor_name, "armor_defense": armor_defense,
+		"experience": experience, "level": level, "skill_points": skill_points, "bleed_turns": bleed_turns, "enemy_phase": enemy_phase,
+		"enemy_name": enemy_name, "enemy_max_hp": enemy_max_hp, "enemy_power": enemy_power,
 		"enemy_pos": [enemy_pos.x, enemy_pos.y], "enemy_hp": enemy_hp,
 		"enemy_alive": enemy_alive, "cache_open": cache_open,
 		"contract_accepted": contract_accepted, "contract_complete": contract_complete,
@@ -295,6 +415,19 @@ func _load_game() -> void:
 	stamina = clampi(int(data.get("stamina", 8)), 0, max_stamina)
 	coins = int(data.get("coins", 0))
 	potions = int(data.get("potions", 0))
+	bandages = int(data.get("bandages", 0))
+	weapon_name = str(data.get("weapon_name", "Worn blade"))
+	weapon_bonus = int(data.get("weapon_bonus", 0))
+	armor_name = str(data.get("armor_name", "Traveler's coat"))
+	armor_defense = int(data.get("armor_defense", 1))
+	experience = int(data.get("experience", 0))
+	level = int(data.get("level", 1))
+	skill_points = int(data.get("skill_points", 0))
+	bleed_turns = int(data.get("bleed_turns", 0))
+	enemy_phase = int(data.get("enemy_phase", 0))
+	enemy_name = str(data.get("enemy_name", "MARSH SCAVENGER"))
+	enemy_max_hp = int(data.get("enemy_max_hp", 18))
+	enemy_power = int(data.get("enemy_power", 5))
 	turn = int(data.get("turn", 0))
 	enemy_hp = int(data.get("enemy_hp", 18))
 	enemy_alive = bool(data.get("enemy_alive", true))
@@ -369,7 +502,7 @@ func _draw_world() -> void:
 	_draw_landmark(exit_pos, Color("#8caa91"), "W")
 	if enemy_alive:
 		_draw_actor(enemy_pos, Color("#a95e49"), "!")
-		_text("SCAVENGER  %d/18" % enemy_hp, _screen_pos(enemy_pos) + Vector2(-24, -12), 11, Color("#f0c5a8"))
+		_text("%s  %d/%d" % [enemy_name, enemy_hp, enemy_max_hp], _screen_pos(enemy_pos) + Vector2(-24, -12), 11, Color("#f0c5a8"))
 	_draw_actor(player, Color("#d4c99b"), "@")
 	_text("GREYFEN MARSH  •  TURN %d" % turn, Vector2(ORIGIN.x, 48), 16, Color("#b9c6aa"))
 
@@ -399,26 +532,33 @@ func _draw_hud() -> void:
 	draw_rect(Rect2(1030, 213, 195.0 * stamina / max_stamina, 10), Color("#b99b55"))
 	_text("CROWNS  %d" % coins, Vector2(1030, 252), 16, Color("#d5c48d"))
 	_text("DRAUGHTS  %d" % potions, Vector2(1030, 281), 16, Color("#a9c7aa"))
+	_text("BANDAGES  %d" % bandages, Vector2(1030, 305), 13, Color("#a9c7aa"))
+	_text("LEVEL %d  XP %d" % [level, experience], Vector2(1030, 328), 13, Color("#d5c48d"))
 	draw_line(Vector2(1030, 300), Vector2(1230, 300), Color("#52614f"), 1)
-	_text("CONTRACT", Vector2(1030, 330), 15, Color("#d6c99e"))
+	_text("CONTRACT", Vector2(1030, 360), 15, Color("#d6c99e"))
 	var quest := "Find the scout" if not contract_accepted else ("Return to scout" if contract_complete and not contract_paid else ("Settled" if contract_paid else "Slay the scavenger"))
-	_text(quest, Vector2(1030, 358), 14, Color("#b8c5ae"))
-	_text("FIELD NOTES", Vector2(1030, 405), 14, Color("#d6c99e"))
+	_text(quest, Vector2(1030, 388), 14, Color("#b8c5ae"))
+	_text("FIELD NOTES", Vector2(1030, 430), 14, Color("#d6c99e"))
 	for i in range(combat_log.size()):
-		_text(combat_log[i], Vector2(1030, 433 + i * 31), 11, Color("#aab5a3"))
+		_text(combat_log[i], Vector2(1030, 458 + i * 27), 11, Color("#aab5a3"))
 	draw_rect(Rect2(24, 620, 950, 54), Color("#18241f"))
 	draw_rect(Rect2(24, 620, 950, 54), Color("#52614f"), false, 1)
 	_text(message, Vector2(42, 653), 15, Color("#e1d7b7"))
-	_text("WASD MOVE  •  SPACE STRIKE  •  G GUARD  •  E INTERACT  •  I PACK  •  H HEAL  •  F5 SAVE", Vector2(24, 711), 12, Color("#9ba995"))
+	_text("WASD MOVE • SPACE STRIKE • V HEAVY • G GUARD • E USE • I PACK • H HEAL • B BANDAGE • F5 SAVE", Vector2(24, 711), 12, Color("#9ba995"))
 
 func _draw_inventory() -> void:
 	draw_rect(Rect2(300, 170, 650, 390), Color("#1b2822"))
 	draw_rect(Rect2(300, 170, 650, 390), Color("#a18f65"), false, 2)
 	_text("TRAVELER'S PACK", Vector2(345, 225), 28, Color("#d7c99e"))
-	_text("Healing draughts     x%d" % potions, Vector2(350, 295), 20, Color("#a9c7aa"))
+	_text("Healing draughts     x%d" % potions, Vector2(350, 280), 20, Color("#a9c7aa"))
+	_text("Bandages             x%d" % bandages, Vector2(350, 315), 20, Color("#a9c7aa"))
+	_text("Weapon: %s  (+%d damage)" % [weapon_name, weapon_bonus], Vector2(350, 355), 18, Color("#d5c48d"))
+	_text("Armor: %s  (%d defense)" % [armor_name, armor_defense], Vector2(350, 390), 18, Color("#a9c7aa"))
+	_text("Level %d  •  XP %d / %d  •  Skill points %d" % [level, experience, level * 50, skill_points], Vector2(350, 430), 17, Color("#d7c99e"))
+	_text("Bleeding: %d turns" % bleed_turns, Vector2(350, 465), 16, Color("#c47c68"))
 	_text("Crowns               %d" % coins, Vector2(350, 340), 20, Color("#d5c48d"))
 	_text("Worn blade           equipped", Vector2(350, 385), 20, Color("#c4c0a9"))
-	_text("H: drink a draught    I / ESC: close", Vector2(350, 490), 16, Color("#9ba995"))
+	_text("H: draught  •  B: bandage  •  I / ESC: close", Vector2(350, 520), 16, Color("#9ba995"))
 
 func _draw_help() -> void:
 	draw_rect(Rect2(270, 130, 740, 470), Color("#1b2822"))
@@ -426,7 +566,9 @@ func _draw_help() -> void:
 	_text("FIELD MANUAL", Vector2(320, 190), 30, Color("#d7c99e"))
 	var lines := ["Move one tile at a time. Every action gives nearby enemies a turn.",
 		"SPACE attacks an adjacent foe. Attacks cost 2 stamina.",
-		"G guards and restores stamina; H consumes a healing draught.",
+		"G guards and restores stamina; H heals, B dresses bleeding wounds.",
+		"V performs a heavy strike for 4 stamina. Armor reduces incoming damage.",
+		"Find the cache for improved armor and a stronger blade. Defeat both creatures.",
 		"E interacts with the scout, cache, and western road.",
 		"Accept the scout's contract, defeat the scavenger, then return.",
 		"F5 saves locally. F9 loads. I opens your pack.",
