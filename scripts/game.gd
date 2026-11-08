@@ -549,7 +549,7 @@ func _draw() -> void:
 	elif screen == Screen.DEAD:
 		_draw_overlay("YOU HAVE FALLEN", "The marsh takes another wanderer.", "Press ENTER to begin again  •  ESC for menu")
 	elif screen == Screen.COMPLETE:
-		_draw_overlay("THE ROAD WEST", "Contract settled. Greyfen is safe — for now.", "Press ENTER for a new expedition  •  ESC for menu")
+		_draw_overlay("THE ROAD WEST", "Three blighted reaches lie behind you. The road is quiet — for now.", "Press ENTER for a new expedition  •  ESC for menu")
 
 func _draw_menu() -> void:
 	draw_rect(Rect2(0, 0, 1280, 720), Color("#111916"))
@@ -657,7 +657,7 @@ func _draw_help() -> void:
 		"V performs a heavy strike for 4 stamina. Armor reduces incoming damage.",
 		"Find the cache for improved armor and a stronger blade. Defeat both creatures.",
 		"E interacts with the scout, cache, and western road.",
-		"Accept the scout's contract, defeat the scavenger, then return.",
+		"Accept the scout's contract, defeat both creatures, then return.",
 		"F5 saves locally. F9 loads. I opens your pack.",
 		"ESC closes this page. F1 opens this manual."]
 	for i in range(lines.size()):
