@@ -47,6 +47,28 @@ func _run_smoke_tests() -> void:
 	assert(game.enemy_phase == 0 and game.enemy_alive, "new region resets encounter phase")
 	assert(game.vitality_rank == 2 and game.weapon_rank == 1 and game.bulwark_rank == 1, "disciplines persist between regions")
 
+	var saved_data := {
+		"vitality_rank": game.vitality_rank,
+		"weapon_rank": game.weapon_rank,
+		"bulwark_rank": game.bulwark_rank,
+		"player_max_hp": game.player_max_hp,
+		"armor_defense": game.armor_defense
+	}
+	assert(SaveSystem.write(saved_data), "version-three save writes successfully")
+	var restored: Dictionary = SaveSystem.read()
+	assert(int(restored.get("vitality_rank", 0)) == 2, "vitality rank survives save/load")
+	assert(int(restored.get("weapon_rank", 0)) == 1, "weapon rank survives save/load")
+	assert(int(restored.get("bulwark_rank", 0)) == 1, "bulwark rank survives save/load")
+
+	var legacy_config := ConfigFile.new()
+	legacy_config.set_value("meta", "version", 2)
+	legacy_config.set_value("run", "data", {"skill_points": 2})
+	assert(legacy_config.save("user://ashen_marches.save") == OK, "legacy fixture writes")
+	var legacy_data: Dictionary = SaveSystem.read()
+	assert(int(legacy_data.get("skill_points", 0)) == 2, "version-two save remains readable")
+	assert(not legacy_data.has("weapon_rank"), "legacy save defaults new discipline ranks")
+
 	game.queue_free()
-	print("PASS: progression, disciplines, combat rewards, and region transition")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://ashen_marches.save"))
+	print("PASS: progression, disciplines, combat rewards, region transition, and save compatibility")
 	quit(0)
