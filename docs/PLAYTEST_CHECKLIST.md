@@ -15,6 +15,9 @@ Run from a clean Godot 4.3+ editor using F6 or F5.
 - [ ] Guard and verify stamina recovery plus reduced incoming damage.
 - [ ] Defeat both creatures; verify the second enemy uses the region's configured name, health, and power.
 - [ ] Verify XP, crowns, and level-up rewards are granted for each defeated creature.
+- [ ] Earn a skill point, open disciplines with K, and train Iron Vitality, Weapon Mastery, and Stone Bulwark with 1/2/3.
+- [ ] Verify each discipline caps at rank 2, changes the relevant stat, and cannot spend points after mastery.
+- [ ] Buy Stone Bulwark before opening the supply cache; verify the armor upgrade preserves the perk bonus.
 - [ ] Use a draught and bandage; verify health restoration and bleeding removal.
 - [ ] Confirm death presents a restart path.
 
@@ -26,8 +29,8 @@ Run from a clean Godot 4.3+ editor using F6 or F5.
 
 ## Persistence
 - [ ] Save with F5, restart the application, and load with F9.
-- [ ] Verify player stats, equipment, inventory, resources, enemy phase/health, contract state, region, and explored map are restored.
-- [ ] Load a version-1 save and verify missing version-2 fields fall back to safe defaults.
+- [ ] Verify player stats, equipment, inventory, resources, skill ranks, enemy phase/health, contract state, region, and explored map are restored.
+- [ ] Load version-1 and version-2 saves and verify missing version-3 discipline fields default to rank zero.
 
 ## Test evidence
 Record Godot version, platform, and any failing step here after an actual run. A static code review is not a substitute for this runtime playtest.
