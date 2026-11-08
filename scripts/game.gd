@@ -417,6 +417,7 @@ func _advance_region() -> void:
 	contract_accepted = false
 	contract_complete = false
 	contract_paid = false
+	explored.clear()
 	enemy_pos = Vector2i(14, 6)
 	match region_index:
 		1:
