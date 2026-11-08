@@ -250,9 +250,9 @@ func _attack() -> void:
 			enemy_phase = 1
 			enemy_name = _region_second_enemy()
 			enemy_pos = Vector2i(17, 6)
-			enemy_hp = 26
-			enemy_max_hp = 26
-			enemy_power = 7
+			enemy_hp = _region_second_hp()
+			enemy_max_hp = _region_second_hp()
+			enemy_power = _region_second_power()
 			enemy_alive = true
 			_set_message("A larger shape rises from the black water!")
 			_log("A Mire Stalker emerges from the reeds.")
@@ -408,6 +408,12 @@ func _region_second_enemy() -> String:
 		0: return "MIRE STALKER"
 		1: return "CISTERN BRUTE"
 		_: return "HOLLOW REVENANT"
+
+func _region_second_hp() -> int:
+	return [26, 31, 38][region_index]
+
+func _region_second_power() -> int:
+	return [7, 8, 10][region_index]
 
 func _advance_region() -> void:
 	if region_index >= 2:

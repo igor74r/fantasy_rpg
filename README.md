@@ -5,7 +5,7 @@ A top-down, turn-based dark-fantasy survival RPG built with Godot 4.x and GDScri
 ## Current playable slice
 
 - Explore the Greyfen marsh with tile-by-tile, turn-consuming movement.
-- Complete the scout's contract by defeating a Marsh Scavenger and a tougher Mire Stalker.
+- Complete regional contracts against escalating pairs of creatures, from marsh scavengers to the horrors of Old Ironroot Mine.
 - Tactical combat: standard attacks, stamina-costing heavy strikes, guard, armor mitigation.
 - Character progression: experience, levels, permanent health/stamina gains, skill-point rewards.
 - Equipment: find a Fen-forged sword and Marshguard coat in the supply cache.

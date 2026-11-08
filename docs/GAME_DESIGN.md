@@ -27,6 +27,10 @@ A compact, self-contained expedition around the ruined watchpost of Greyfen:
 - E: interact with the nearest landmark/NPC/cache
 - I: inventory
 - H: use healing draught
+- B: use bandage
+- V: heavy attack
+- T: trade near the scout
+- C: craft with gathered materials
 - F5: save; F9: load
 - Esc: close a panel / return to menu
 
@@ -37,4 +41,4 @@ A compact, self-contained expedition around the ruined watchpost of Greyfen:
 - Save format version 2 stores region and crafting resources while accepting version-1 saves.
 
 ## Design boundaries
-This is the first complete vertical slice, not the full commercial-scale game. Future systems can add deeper injury locations, additional equipment slots, crafting, larger procedural regions, more enemy archetypes, and richer dialogue without breaking the playable loop.
+This is the first complete vertical slice, not the full commercial-scale game. Future systems can add deeper injury locations, additional equipment slots, larger procedural regions, more enemy archetypes, and richer dialogue without breaking the playable loop.
