@@ -2,7 +2,7 @@ extends RefCounted
 class_name SaveSystem
 
 const SAVE_PATH := "user://ashen_marches.save"
-const SAVE_VERSION := 2
+const SAVE_VERSION := 3
 
 static func write(data: Dictionary) -> bool:
 	var config := ConfigFile.new()
