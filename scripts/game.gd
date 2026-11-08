@@ -4,7 +4,7 @@ const TILE := 42
 const MAP_W := 21
 const MAP_H := 13
 const ORIGIN := Vector2(90, 68)
-const SAVE_VERSION := 1
+const SAVE_VERSION := 3
 
 enum Screen { MENU, WORLD, INVENTORY, SKILLS, HELP, DEAD, COMPLETE }
 
@@ -87,7 +87,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		queue_redraw()
 		return
 	if key.keycode == KEY_ESCAPE:
-		if screen == Screen.INVENTORY or screen == Screen.HELP:
+		if screen == Screen.INVENTORY or screen == Screen.SKILLS or screen == Screen.HELP:
 			screen = Screen.WORLD
 		else:
 			screen = Screen.MENU
@@ -166,6 +166,7 @@ func _new_game() -> void:
 	bulwark_rank = 0
 	bleed_turns = 0
 	turn = 0
+	combat_log.clear()
 	enemy_pos = Vector2i(13, 6)
 	enemy_hp = 18
 	enemy_max_hp = 18
