@@ -174,8 +174,7 @@ func _move(direction: Vector2i) -> void:
 	_mark_seen()
 	_advance_turn()
 	if player == exit_pos and contract_paid:
-		screen = Screen.COMPLETE
-		_set_message("The road west is open. Greyfen remembers your name.")
+		_advance_region()
 
 func _blocked(cell: Vector2i) -> bool:
 	if cell.x < 1 or cell.x >= MAP_W - 1 or cell.y < 1 or cell.y >= MAP_H - 1:
@@ -237,7 +236,7 @@ func _attack() -> void:
 	if CombatRules.hit_chance(0.9):
 		var damage := CombatRules.player_damage(7 + weapon_bonus, enemy_guard)
 		enemy_hp -= damage
-		_log("You strike the scavenger for %d." % damage)
+		_log("You strike %s for %d." % [enemy_name.to_lower(), damage])
 	else:
 		_log("Your strike cuts only mist.")
 	if enemy_hp <= 0:
