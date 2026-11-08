@@ -7,16 +7,16 @@ A top-down, turn-based dark-fantasy survival RPG built with Godot 4.x and GDScri
 - Explore the Greyfen marsh with tile-by-tile, turn-consuming movement.
 - Complete regional contracts against escalating pairs of creatures, from marsh scavengers to the horrors of Old Ironroot Mine.
 - Tactical combat: standard attacks, stamina-costing heavy strikes, guard, armor mitigation.
-- Character progression: experience, levels, permanent health/stamina gains, skill-point rewards.
+- Character progression: experience, levels, permanent health/stamina gains, and a spendable three-discipline skill tree (K).
 - Equipment: find a Fen-forged sword and Marshguard coat in the supply cache.
 - Survival: bleeding wounds, healing draughts, bandages, and stamina recovery.
 - Three linked regions: Greyfen Marsh, the Drowned Road, and Old Ironroot Mine, with escalating encounters and regional contracts.
 - Quartermaster trading near the scout (`T`) and field crafting (`C`) from herbs and scrap found in supply caches.
-- Persistent region, crafting materials, inventory, and progression; version-2 saves accept version-1 saves.
+- Persistent region, crafting materials, inventory, and progression; version-3 saves accept older version-1 and version-2 saves.
 
 ## Run
 
-Open `project.godot` in Godot 4.3 or newer and run the project (F6/F5).
+Open `project.godot` in Godot 4.3 or newer and run the project (F6/F5). The GitHub Actions workflow runs a headless progression smoke test on pushes and pull requests.
 
 ## Controls
 
@@ -30,6 +30,7 @@ Open `project.godot` in Godot 4.3 or newer and run the project (F6/F5).
 - B: use bandage (stops bleeding and heals)
 - T: trade near the scout/quartermaster
 - C: craft from herbs and scrap
+- K: spend skill points on Iron Vitality, Weapon Mastery, or Stone Bulwark (two ranks each)
 - F1: field manual
 - F5 / F9: save / load
 
