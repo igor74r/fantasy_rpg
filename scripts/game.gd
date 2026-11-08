@@ -92,6 +92,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			screen = Screen.WORLD
 		elif key.keycode == KEY_H:
 			_use_potion()
+		elif key.keycode == KEY_B:
+			_use_bandage()
 		queue_redraw()
 		return
 	if screen == Screen.HELP:
@@ -389,6 +391,7 @@ func _save_game() -> void:
 	var data := {
 		"player": [player.x, player.y], "hp": player_hp, "stamina": stamina,
 		"coins": coins, "potions": potions, "bandages": bandages, "turn": turn,
+		"player_max_hp": player_max_hp, "max_stamina": max_stamina,
 		"weapon_name": weapon_name, "weapon_bonus": weapon_bonus, "armor_name": armor_name, "armor_defense": armor_defense,
 		"experience": experience, "level": level, "skill_points": skill_points, "bleed_turns": bleed_turns, "enemy_phase": enemy_phase,
 		"enemy_name": enemy_name, "enemy_max_hp": enemy_max_hp, "enemy_power": enemy_power,
@@ -411,6 +414,8 @@ func _load_game() -> void:
 	var e: Array = data.get("enemy_pos", [13, 6])
 	player = Vector2i(int(p[0]), int(p[1]))
 	enemy_pos = Vector2i(int(e[0]), int(e[1]))
+	player_max_hp = maxi(30, int(data.get("player_max_hp", 30)))
+	max_stamina = maxi(8, int(data.get("max_stamina", 8)))
 	player_hp = clampi(int(data.get("hp", 30)), 0, player_max_hp)
 	stamina = clampi(int(data.get("stamina", 8)), 0, max_stamina)
 	coins = int(data.get("coins", 0))
