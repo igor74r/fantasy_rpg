@@ -16,7 +16,7 @@ A top-down, turn-based dark-fantasy survival RPG built with Godot 4.x and GDScri
 
 ## Run
 
-Open `project.godot` in Godot 4.3 or newer and run the project (F6/F5).
+Open `project.godot` in Godot 4.3 or newer and run the project (F6/F5). The GitHub Actions workflow runs a headless progression smoke test on pushes and pull requests.
 
 ## Controls
 
