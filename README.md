@@ -10,7 +10,9 @@ A top-down, turn-based dark-fantasy survival RPG built with Godot 4.x and GDScri
 - Character progression: experience, levels, permanent health/stamina gains, skill-point rewards.
 - Equipment: find a Fen-forged sword and Marshguard coat in the supply cache.
 - Survival: bleeding wounds, healing draughts, bandages, and stamina recovery.
-- Loot, contract rewards, inventory, death/restart, and local save/load.
+- Three linked regions: Greyfen Marsh, the Drowned Road, and Old Ironroot Mine, with escalating encounters and regional contracts.
+- Quartermaster trading near the scout (`T`) and field crafting (`C`) from herbs and scrap found in supply caches.
+- Persistent region, crafting materials, inventory, and progression; version-2 saves accept version-1 saves.
 
 ## Run
 
@@ -26,6 +28,8 @@ Open `project.godot` in Godot 4.3 or newer and run the project (F6/F5).
 - I: inventory
 - H: use healing draught
 - B: use bandage (stops bleeding and heals)
+- T: trade near the scout/quartermaster
+- C: craft from herbs and scrap
 - F1: field manual
 - F5 / F9: save / load
 

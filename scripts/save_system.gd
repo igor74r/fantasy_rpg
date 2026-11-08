@@ -2,7 +2,7 @@ extends RefCounted
 class_name SaveSystem
 
 const SAVE_PATH := "user://ashen_marches.save"
-const SAVE_VERSION := 1
+const SAVE_VERSION := 2
 
 static func write(data: Dictionary) -> bool:
 	var config := ConfigFile.new()
@@ -14,7 +14,8 @@ static func read() -> Dictionary:
 	var config := ConfigFile.new()
 	if config.load(SAVE_PATH) != OK:
 		return {}
-	if int(config.get_value("meta", "version", 0)) != SAVE_VERSION:
+	var version := int(config.get_value("meta", "version", 0))
+	if version < 1 or version > SAVE_VERSION:
 		return {}
 	var data: Variant = config.get_value("run", "data", {})
 	return data if data is Dictionary else {}

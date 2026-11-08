@@ -44,6 +44,9 @@ var message_timer := 0.0
 var combat_log: Array[String] = []
 var world_seed := 7319
 var explored: Dictionary = {}
+var region_index := 0
+var herbs := 0
+var scrap := 0
 
 const WALLS := [Vector2i(0,0), Vector2i(1,0), Vector2i(2,0), Vector2i(3,0), Vector2i(4,0), Vector2i(5,0), Vector2i(6,0), Vector2i(7,0), Vector2i(8,0), Vector2i(9,0), Vector2i(10,0), Vector2i(11,0), Vector2i(12,0), Vector2i(13,0), Vector2i(14,0), Vector2i(15,0), Vector2i(16,0), Vector2i(17,0), Vector2i(18,0), Vector2i(19,0), Vector2i(20,0), Vector2i(0,1), Vector2i(20,1), Vector2i(0,2), Vector2i(20,2), Vector2i(0,3), Vector2i(20,3), Vector2i(0,4), Vector2i(20,4), Vector2i(0,5), Vector2i(20,5), Vector2i(0,6), Vector2i(20,6), Vector2i(0,7), Vector2i(20,7), Vector2i(0,8), Vector2i(20,8), Vector2i(0,9), Vector2i(20,9), Vector2i(0,10), Vector2i(20,10), Vector2i(0,11), Vector2i(20,11), Vector2i(0,12), Vector2i(1,12), Vector2i(2,12), Vector2i(3,12), Vector2i(4,12), Vector2i(5,12), Vector2i(6,12), Vector2i(7,12), Vector2i(8,12), Vector2i(9,12), Vector2i(10,12), Vector2i(11,12), Vector2i(12,12), Vector2i(13,12), Vector2i(14,12), Vector2i(15,12), Vector2i(16,12), Vector2i(17,12), Vector2i(18,12), Vector2i(19,12), Vector2i(20,12)]
 
@@ -114,6 +117,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		KEY_H: _use_potion()
 		KEY_B: _use_bandage()
 		KEY_V: _heavy_attack()
+		KEY_T: _trade()
+		KEY_C: _craft()
 		KEY_F5: _save_game()
 		KEY_F9: _load_game()
 		KEY_F1: screen = Screen.HELP
@@ -122,6 +127,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 func _new_game() -> void:
 	screen = Screen.WORLD
 	player = Vector2i(3, 8)
+	region_index = 0
+	herbs = 0
+	scrap = 0
 	player_hp = player_max_hp
 	stamina = max_stamina
 	coins = 0
@@ -240,7 +248,7 @@ func _attack() -> void:
 		_check_level_up()
 		if enemy_phase == 0:
 			enemy_phase = 1
-			enemy_name = "MIRE STALKER"
+			enemy_name = _region_second_enemy()
 			enemy_pos = Vector2i(17, 6)
 			enemy_hp = 26
 			enemy_max_hp = 26
@@ -359,6 +367,8 @@ func _interact() -> void:
 				coins += 4
 				potions += 1
 				bandages += 2
+				herbs += 2
+				scrap += 2
 				weapon_name = "Fen-forged sword"
 				weapon_bonus = 2
 				armor_name = "Marshguard coat"
@@ -368,8 +378,7 @@ func _interact() -> void:
 			_advance_turn()
 		"exit":
 			if contract_paid:
-				screen = Screen.COMPLETE
-				_set_message("You leave Greyfen behind.")
+				_advance_region()
 			else:
 				_set_message("The western road is barred until the scout's contract is settled.")
 		_:
@@ -387,6 +396,79 @@ func _nearest_landmark() -> String:
 			best_distance = d
 	return best
 
+
+func _region_name() -> String:
+	match region_index:
+		0: return "GREYFEN MARSH"
+		1: return "THE DROWNED ROAD"
+		_: return "OLD IRONROOT MINE"
+
+func _region_second_enemy() -> String:
+	match region_index:
+		0: return "MIRE STALKER"
+		1: return "CISTERN BRUTE"
+		_: return "HOLLOW REVENANT"
+
+func _advance_region() -> void:
+	if region_index >= 2:
+		screen = Screen.COMPLETE
+		_set_message("The western road is open. Three blighted reaches lie behind you.")
+		return
+	region_index += 1
+	player = Vector2i(3, 8)
+	enemy_phase = 0
+	enemy_alive = true
+	enemy_guard = false
+	player_guard = false
+	cache_open = false
+	contract_accepted = false
+	contract_complete = false
+	contract_paid = false
+	enemy_pos = Vector2i(14, 6)
+	match region_index:
+		1:
+			enemy_name = "ROAD WIGHT"
+			enemy_hp = 23
+			enemy_max_hp = 23
+			enemy_power = 6
+		2:
+			enemy_name = "ASHEN KNIGHT"
+			enemy_hp = 29
+			enemy_max_hp = 29
+			enemy_power = 8
+	_mark_seen()
+	_log("Expedition enters %s." % _region_name().capitalize())
+	_set_message("New frontier: %s. Find its scout and prepare for the hunt." % _region_name().capitalize())
+
+func _trade() -> void:
+	if _nearest_landmark() != "scout":
+		_set_message("Trade only with the quartermaster beside the scout.")
+		return
+	if coins >= 8:
+		coins -= 8
+		potions += 1
+		_set_message("Quartermaster: one healing draught. Eight crowns.")
+	elif coins >= 6:
+		coins -= 6
+		bandages += 2
+		_set_message("Quartermaster: two bandages. Six crowns.")
+	else:
+		_set_message("A draught costs 8 crowns; two bandages cost 6.")
+
+func _craft() -> void:
+	if herbs >= 2 and scrap >= 1:
+		herbs -= 2
+		scrap -= 1
+		potions += 1
+		_set_message("You brew a field draught from marsh herbs and scrap.")
+	elif herbs >= 1 and scrap >= 1:
+		herbs -= 1
+		scrap -= 1
+		bandages += 1
+		_set_message("You bind a fresh bandage from gathered materials.")
+	else:
+		_set_message("Crafting needs herbs and scrap. Search each region's supply cache.")
+
 func _save_game() -> void:
 	var data := {
 		"player": [player.x, player.y], "hp": player_hp, "stamina": stamina,
@@ -398,7 +480,8 @@ func _save_game() -> void:
 		"enemy_pos": [enemy_pos.x, enemy_pos.y], "enemy_hp": enemy_hp,
 		"enemy_alive": enemy_alive, "cache_open": cache_open,
 		"contract_accepted": contract_accepted, "contract_complete": contract_complete,
-		"contract_paid": contract_paid
+		"contract_paid": contract_paid, "region_index": region_index,
+		"herbs": herbs, "scrap": scrap
 	}
 	if SaveSystem.write(data):
 		_set_message("Game saved.")
@@ -440,6 +523,9 @@ func _load_game() -> void:
 	contract_accepted = bool(data.get("contract_accepted", false))
 	contract_complete = bool(data.get("contract_complete", false))
 	contract_paid = bool(data.get("contract_paid", false))
+	region_index = clampi(int(data.get("region_index", 0)), 0, 2)
+	herbs = maxi(0, int(data.get("herbs", 0)))
+	scrap = maxi(0, int(data.get("scrap", 0)))
 	screen = Screen.WORLD
 	_mark_seen()
 	_set_message("Expedition restored.")
@@ -509,7 +595,7 @@ func _draw_world() -> void:
 		_draw_actor(enemy_pos, Color("#a95e49"), "!")
 		_text("%s  %d/%d" % [enemy_name, enemy_hp, enemy_max_hp], _screen_pos(enemy_pos) + Vector2(-24, -12), 11, Color("#f0c5a8"))
 	_draw_actor(player, Color("#d4c99b"), "@")
-	_text("GREYFEN MARSH  •  TURN %d" % turn, Vector2(ORIGIN.x, 48), 16, Color("#b9c6aa"))
+	_text("%s  •  TURN %d" % [_region_name(), turn], Vector2(ORIGIN.x, 48), 16, Color("#b9c6aa"))
 
 func _draw_landmark(pos: Vector2i, color: Color, glyph: String) -> void:
 	var center := _screen_pos(pos) + Vector2(TILE / 2.0 - 1, TILE / 2.0 - 1)
@@ -538,6 +624,7 @@ func _draw_hud() -> void:
 	_text("CROWNS  %d" % coins, Vector2(1030, 252), 16, Color("#d5c48d"))
 	_text("DRAUGHTS  %d" % potions, Vector2(1030, 281), 16, Color("#a9c7aa"))
 	_text("BANDAGES  %d" % bandages, Vector2(1030, 305), 13, Color("#a9c7aa"))
+	_text("HERBS %d  SCRAP %d" % [herbs, scrap], Vector2(1030, 345), 12, Color("#a9c7aa"))
 	_text("LEVEL %d  XP %d" % [level, experience], Vector2(1030, 328), 13, Color("#d5c48d"))
 	draw_line(Vector2(1030, 300), Vector2(1230, 300), Color("#52614f"), 1)
 	_text("CONTRACT", Vector2(1030, 360), 15, Color("#d6c99e"))
