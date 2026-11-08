@@ -263,6 +263,27 @@ func _heavy_attack() -> void:
 		_resolve_enemy_defeat()
 	_advance_turn()
 
+func _resolve_enemy_defeat() -> void:
+	enemy_hp = 0
+	coins += 6 + enemy_phase * 5
+	experience += 35 + enemy_phase * 25
+	_log("%s falls. You gain experience and loot." % enemy_name.capitalize())
+	_check_level_up()
+	if enemy_phase == 0:
+		enemy_phase = 1
+		enemy_name = _region_second_enemy()
+		enemy_pos = Vector2i(17, 6)
+		enemy_hp = _region_second_hp()
+		enemy_max_hp = _region_second_hp()
+		enemy_power = _region_second_power()
+		enemy_alive = true
+		_set_message("A larger shape rises from the black water!")
+		_log("%s emerges from the mire." % enemy_name.capitalize())
+	else:
+		enemy_alive = false
+		contract_complete = true
+		_set_message("The creatures are slain. Return to the scout.")
+
 func _check_level_up() -> void:
 	var threshold := level * 50
 	while experience >= threshold:
