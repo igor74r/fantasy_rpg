@@ -1,9 +1,9 @@
 extends Node2D
 
-const TILE := 48
+const TILE := 42
 const MAP_W := 21
 const MAP_H := 13
-const ORIGIN := Vector2(134, 74)
+const ORIGIN := Vector2(90, 68)
 const SAVE_VERSION := 1
 
 enum Screen { MENU, WORLD, INVENTORY, HELP, DEAD, COMPLETE }
@@ -241,25 +241,7 @@ func _attack() -> void:
 	else:
 		_log("Your strike cuts only mist.")
 	if enemy_hp <= 0:
-		enemy_hp = 0
-		coins += 6 + enemy_phase * 5
-		experience += 35 + enemy_phase * 25
-		_log("%s falls. You gain experience and loot." % enemy_name.capitalize())
-		_check_level_up()
-		if enemy_phase == 0:
-			enemy_phase = 1
-			enemy_name = _region_second_enemy()
-			enemy_pos = Vector2i(17, 6)
-			enemy_hp = _region_second_hp()
-			enemy_max_hp = _region_second_hp()
-			enemy_power = _region_second_power()
-			enemy_alive = true
-			_set_message("A larger shape rises from the black water!")
-			_log("A Mire Stalker emerges from the reeds.")
-		else:
-			enemy_alive = false
-			contract_complete = contract_accepted
-			_set_message("The marsh is quiet. Return to the scout.")
+		_resolve_enemy_defeat()
 	_advance_turn()
 
 func _heavy_attack() -> void:
@@ -278,22 +260,7 @@ func _heavy_attack() -> void:
 	enemy_hp -= damage
 	_log("Heavy strike deals %d damage." % damage)
 	if enemy_hp <= 0:
-		enemy_hp = 0
-		coins += 6 + enemy_phase * 5
-		experience += 35 + enemy_phase * 25
-		_log("%s falls. You gain experience and loot." % enemy_name.capitalize())
-		_check_level_up()
-		if enemy_phase == 0:
-			enemy_phase = 1
-			enemy_name = "MIRE STALKER"
-			enemy_pos = Vector2i(17, 6)
-			enemy_hp = 26
-			enemy_max_hp = 26
-			enemy_power = 7
-			enemy_alive = true
-		else:
-			enemy_alive = false
-			contract_complete = contract_accepted
+		_resolve_enemy_defeat()
 	_advance_turn()
 
 func _check_level_up() -> void:
@@ -487,7 +454,7 @@ func _save_game() -> void:
 		"enemy_alive": enemy_alive, "cache_open": cache_open,
 		"contract_accepted": contract_accepted, "contract_complete": contract_complete,
 		"contract_paid": contract_paid, "region_index": region_index,
-		"herbs": herbs, "scrap": scrap
+		"herbs": herbs, "scrap": scrap, "explored": explored
 	}
 	if SaveSystem.write(data):
 		_set_message("Game saved.")
@@ -532,6 +499,8 @@ func _load_game() -> void:
 	region_index = clampi(int(data.get("region_index", 0)), 0, 2)
 	herbs = maxi(0, int(data.get("herbs", 0)))
 	scrap = maxi(0, int(data.get("scrap", 0)))
+	var saved_explored: Variant = data.get("explored", {})
+	explored = saved_explored if saved_explored is Dictionary else {}
 	screen = Screen.WORLD
 	_mark_seen()
 	_set_message("Expedition restored.")
@@ -655,7 +624,7 @@ func _draw_inventory() -> void:
 	_text("Level %d  •  XP %d / %d  •  Skill points %d" % [level, experience, level * 50, skill_points], Vector2(350, 430), 17, Color("#d7c99e"))
 	_text("Bleeding: %d turns" % bleed_turns, Vector2(350, 465), 16, Color("#c47c68"))
 	_text("Crowns               %d" % coins, Vector2(350, 340), 20, Color("#d5c48d"))
-	_text("Worn blade           equipped", Vector2(350, 385), 20, Color("#c4c0a9"))
+	_text("Herbs %d  •  Scrap %d" % [herbs, scrap], Vector2(350, 410), 18, Color("#a9c7aa"))
 	_text("H: draught  •  B: bandage  •  I / ESC: close", Vector2(350, 520), 16, Color("#9ba995"))
 
 func _draw_help() -> void:
