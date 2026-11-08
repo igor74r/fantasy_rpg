@@ -411,7 +411,7 @@ func _interact() -> void:
 				weapon_name = "Fen-forged sword"
 				weapon_bonus = 2
 				armor_name = "Marshguard coat"
-				armor_defense = 3
+				armor_defense = 3 + bulwark_rank
 				_set_message("You find a Fen-forged sword, Marshguard coat, draught and bandages.")
 				_log("Cache: upgraded weapon and armor, +1 draught, +2 bandages.")
 			_advance_turn()
