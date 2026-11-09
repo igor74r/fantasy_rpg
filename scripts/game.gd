@@ -800,22 +800,20 @@ func _draw_help() -> void:
 	draw_rect(Rect2(270, 130, 740, 470), Color("#1b2822"))
 	draw_rect(Rect2(270, 130, 740, 470), Color("#a18f65"), false, 2)
 	_text("FIELD MANUAL", Vector2(320, 190), 30, Color("#d7c99e"))
-	var lines := ["Move one tile at a time. Every action gives nearby enemies a turn.",
-		"Adjacent enemies telegraph committed attacks before striking — guard during the wind-up.",
-		"Road Wights and Cistern Brutes drain stamina; Ashen Knights and Hollow Revenants can cause bleeding.",
-		"SPACE attacks an adjacent foe. Attacks cost 2 stamina.",
-		"G guards and restores stamina; H heals, B dresses bleeding wounds.",
-		"V performs a heavy strike for 4 stamina. Armor reduces incoming damage.",
-		"Find the cache for improved armor and a stronger blade. Defeat both creatures.",
-		"Gather the marked herb patch (H) and salvage site (M) in every region with E.",
-		"Each field node yields two materials once per region; gathered nodes stay depleted after loading.",
-		"E interacts with the scout, cache, resource nodes, and western road.",
-		"Accept the scout's contract, defeat both creatures, then return.",
-		"F5 saves locally. F9 loads. I opens your pack; K opens disciplines (1/2/3 to train).",
-		"ESC closes this page. F1 opens this manual."]
+	var lines := ["Every move or action advances nearby enemies by one turn.",
+		"Adjacent foes telegraph attacks; guard or strike before impact.",
+		"Road Wights/Cistern Brutes drain stamina; Ashen Knights/Hollow Revenants cause wounds.",
+		"SPACE attacks (2 stamina); V performs a heavy strike (4 stamina).",
+		"G guards and restores stamina; H heals; B stops bleeding.",
+		"Find the cache for a better blade, armor, draughts, and bandages.",
+		"Gather the H herb patch and M salvage site with E: two materials each, once per region.",
+		"Gathered field nodes stay depleted after saving/loading; use C to craft supplies.",
+		"Accept the scout's contract, defeat both creatures, then return for your reward.",
+		"T trades near the scout. I opens your pack; K opens disciplines (1/2/3 to train).",
+		"F5 saves; F9 loads. ESC closes this page; F1 opens the manual."]
 	for i in range(lines.size()):
-		_text(lines[i], Vector2(320, 255 + i * 38), 16, Color("#c3c0a9"))
-	_text("Press any key to return", Vector2(320, 550), 15, Color("#a9b99c"))
+		_text(lines[i], Vector2(320, 245 + i * 28), 15, Color("#c3c0a9"))
+	_text("Press any key to return", Vector2(320, 565), 15, Color("#a9b99c"))
 
 func _draw_overlay(title: String, subtitle: String, footer: String) -> void:
 	draw_rect(Rect2(220, 210, 840, 300), Color("#18231f"))
