@@ -15,7 +15,9 @@ func _run_smoke_tests() -> void:
 	assert(game.combat_log.size() == 1, "fresh expedition starts a fresh field log")
 
 	game.skill_points = 3
+	var turn_before_training := game.turn
 	game._buy_skill(0)
+	assert(game.turn == turn_before_training + 1, "successful training consumes a world turn")
 	game._buy_skill(1)
 	game._buy_skill(2)
 	assert(game.vitality_rank == 1 and game.player_max_hp == 35 and game.player_hp == 35, "Iron Vitality applies health")
@@ -29,6 +31,20 @@ func _run_smoke_tests() -> void:
 	game.skill_points = 1
 	game._buy_skill(0)
 	assert(game.vitality_rank == 2 and game.player_max_hp == 40, "disciplines can reach rank two")
+	game.player = Vector2i(4, 4)
+	game.coins = 8
+	var potions_before_trade := game.potions
+	var turn_before_trade := game.turn
+	game._trade()
+	assert(game.potions == potions_before_trade + 1 and game.coins == 0, "quartermaster trade grants purchased draught")
+	assert(game.turn == turn_before_trade + 1, "successful trade consumes a world turn")
+	game.herbs = 2
+	game.scrap = 1
+	var potions_before_craft := game.potions
+	var turn_before_craft := game.turn
+	game._craft()
+	assert(game.potions == potions_before_craft + 1 and game.herbs == 0 and game.scrap == 0, "field crafting consumes its ingredients")
+	assert(game.turn == turn_before_craft + 1, "successful crafting consumes a world turn")
 	game.skill_points = 1
 	game._buy_skill(0)
 	assert(game.vitality_rank == 2 and game.skill_points == 1, "mastered discipline cannot consume points")
@@ -63,13 +79,14 @@ func _run_smoke_tests() -> void:
 	assert(int(restored.get("weapon_rank", 0)) == 1, "weapon rank survives save/load")
 	assert(int(restored.get("bulwark_rank", 0)) == 1, "bulwark rank survives save/load")
 
-	var legacy_config := ConfigFile.new()
-	legacy_config.set_value("meta", "version", 2)
-	legacy_config.set_value("run", "data", {"skill_points": 2})
-	assert(legacy_config.save("user://ashen_marches.save") == OK, "legacy fixture writes")
-	var legacy_data: Dictionary = SaveSystem.read()
-	assert(int(legacy_data.get("skill_points", 0)) == 2, "version-two save remains readable")
-	assert(not legacy_data.has("weapon_rank"), "legacy save defaults new discipline ranks")
+	for legacy_version in [1, 2]:
+		var legacy_config := ConfigFile.new()
+		legacy_config.set_value("meta", "version", legacy_version)
+		legacy_config.set_value("run", "data", {"skill_points": 2})
+		assert(legacy_config.save("user://ashen_marches.save") == OK, "legacy fixture writes")
+		var legacy_data: Dictionary = SaveSystem.read()
+		assert(int(legacy_data.get("skill_points", 0)) == 2, "version-%d save remains readable" % legacy_version)
+		assert(not legacy_data.has("weapon_rank"), "legacy save defaults new discipline ranks")
 
 	game.queue_free()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://ashen_marches.save"))

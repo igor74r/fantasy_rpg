@@ -40,6 +40,7 @@ A compact, self-contained expedition around the ruined watchpost of Greyfen:
 - The campaign links Greyfen Marsh, the Drowned Road, and Old Ironroot Mine. Each region resets its local contract and cache while retaining character progression.
 - Quartermaster trading converts crowns into healing draughts or bandage bundles near the scout.
 - Field crafting converts herbs and scrap into draughts or bandages. Caches replenish materials in each region.
+- Successful skill training, quartermaster purchases, and field crafting consume a world turn, preserving the same enemy-response rule as movement and combat.
 - Save format version 3 stores region, crafting resources, explored map cells, and discipline ranks while accepting version-1 and version-2 saves.
 
 ## Design boundaries

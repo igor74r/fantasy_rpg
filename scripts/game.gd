@@ -347,6 +347,7 @@ func _buy_skill(index: int) -> void:
 			_log("Stone Bulwark rank %d: armor defense +1." % bulwark_rank)
 	skill_points -= 1
 	_set_message("Training acquired. Your discipline grows stronger.")
+	_advance_turn()
 
 func _use_bandage() -> void:
 	if bandages <= 0:
@@ -494,10 +495,12 @@ func _trade() -> void:
 		coins -= 8
 		potions += 1
 		_set_message("Quartermaster: one healing draught. Eight crowns.")
+		_advance_turn()
 	elif coins >= 6:
 		coins -= 6
 		bandages += 2
 		_set_message("Quartermaster: two bandages. Six crowns.")
+		_advance_turn()
 	else:
 		_set_message("A draught costs 8 crowns; two bandages cost 6.")
 
@@ -507,11 +510,13 @@ func _craft() -> void:
 		scrap -= 1
 		potions += 1
 		_set_message("You brew a field draught from marsh herbs and scrap.")
+		_advance_turn()
 	elif herbs >= 1 and scrap >= 1:
 		herbs -= 1
 		scrap -= 1
 		bandages += 1
 		_set_message("You bind a fresh bandage from gathered materials.")
+		_advance_turn()
 	else:
 		_set_message("Crafting needs herbs and scrap. Search each region's supply cache.")
 
