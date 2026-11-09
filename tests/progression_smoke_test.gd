@@ -14,6 +14,23 @@ func _run_smoke_tests() -> void:
 	assert(game.skill_points == 0, "fresh expedition resets skill points")
 	assert(game.combat_log.size() == 1, "fresh expedition starts a fresh field log")
 
+	var herb_node: Vector2i = game._resource_node_positions()["herbs"]
+	game.player = herb_node + Vector2i.LEFT
+	var turn_before_herbs := game.turn
+	game._interact()
+	assert(game.herbs == 2 and game.gathered_nodes.has("0:herbs"), "herb patch yields two herbs and is marked gathered")
+	assert(game.turn == turn_before_herbs + 1, "foraging consumes a world turn")
+	game._interact()
+	assert(game.herbs == 2 and game.turn == turn_before_herbs + 1, "gathered herb patch cannot be harvested twice")
+	var scrap_node: Vector2i = game._resource_node_positions()["scrap"]
+	game.player = scrap_node + Vector2i.LEFT
+	game._interact()
+	assert(game.scrap == 2 and game.gathered_nodes.has("0:scrap"), "salvage node yields two scrap")
+	game.herbs = 0
+	game.scrap = 0
+	game.gathered_nodes.clear()
+	game.player = Vector2i(3, 8)
+
 	game.skill_points = 3
 	var turn_before_training := game.turn
 	game._buy_skill(0)
@@ -90,15 +107,18 @@ func _run_smoke_tests() -> void:
 
 	game.enemy_windup = true
 	game.enemy_style = "drainer"
+	game.gathered_nodes["1:herbs"] = true
 	game._save_game()
 	game.enemy_windup = false
 	game.enemy_style = "bleeder"
+	game.gathered_nodes.clear()
 	game.vitality_rank = 0
 	game.weapon_rank = 0
 	game.bulwark_rank = 0
 	game._load_game()
 	assert(game.vitality_rank == 2 and game.weapon_rank == 1 and game.bulwark_rank == 1, "game save/load restores all discipline ranks")
 	assert(game.enemy_windup and game.enemy_style == "drainer", "game save/load restores enemy intent and archetype")
+	assert(game.gathered_nodes.has("1:herbs"), "game save/load restores depleted regional resource nodes")
 	var restored: Dictionary = SaveSystem.read()
 	assert(int(restored.get("vitality_rank", 0)) == 2, "vitality rank survives save/load")
 	assert(int(restored.get("weapon_rank", 0)) == 1, "weapon rank survives save/load")
