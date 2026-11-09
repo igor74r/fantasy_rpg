@@ -9,6 +9,14 @@ Run from a clean Godot 4.3+ editor using F6 or F5.
 - [ ] Open the cache; confirm equipment, crowns, draughts, bandages, herbs, and scrap are awarded once.
 - [ ] Open the pack; verify equipment, consumables, resources, level, and bleeding state are readable.
 
+## Exploration and resources
+- [ ] Locate the herb patch and salvage site in each region; interact while adjacent with `E`.
+- [ ] Verify each node yields two matching materials and consumes one world turn.
+- [ ] Interact with a depleted node again; verify no duplicate materials or extra turn are granted.
+- [ ] Save after gathering, reload, and verify depleted nodes stay depleted.
+- [ ] Advance to another region and verify its own herb and salvage nodes can be collected independently.
+- [ ] Use gathered herbs and scrap with `C` to craft draughts or bandages.
+
 ## Combat and survival
 - [ ] Fight the first creature with standard attacks and verify stamina cost.
 - [ ] Use a heavy attack and verify its higher damage and stamina cost.
