@@ -251,7 +251,8 @@ func _advance_turn() -> void:
 		elif distance <= 7:
 			var step := Vector2i(signi(player.x - enemy_pos.x), signi(player.y - enemy_pos.y))
 			var candidate := enemy_pos + step
-			if not _blocked(candidate) and candidate != player and candidate != scout_pos and candidate != cache_pos:
+			var resource_nodes := _resource_node_positions()
+			if not _blocked(candidate) and candidate != player and candidate != scout_pos and candidate != cache_pos and candidate != resource_nodes["herbs"] and candidate != resource_nodes["scrap"]:
 				enemy_pos = candidate
 	if bleed_turns > 0 and player_hp > 0:
 		player_hp = maxi(0, player_hp - 1)
@@ -806,7 +807,9 @@ func _draw_help() -> void:
 		"G guards and restores stamina; H heals, B dresses bleeding wounds.",
 		"V performs a heavy strike for 4 stamina. Armor reduces incoming damage.",
 		"Find the cache for improved armor and a stronger blade. Defeat both creatures.",
-		"E interacts with the scout, cache, and western road.",
+		"Gather the marked herb patch (H) and salvage site (M) in every region with E.",
+		"Each field node yields two materials once per region; gathered nodes stay depleted after loading.",
+		"E interacts with the scout, cache, resource nodes, and western road.",
 		"Accept the scout's contract, defeat both creatures, then return.",
 		"F5 saves locally. F9 loads. I opens your pack; K opens disciplines (1/2/3 to train).",
 		"ESC closes this page. F1 opens this manual."]
