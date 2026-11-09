@@ -52,6 +52,7 @@ var explored: Dictionary = {}
 var region_index := 0
 var herbs := 0
 var scrap := 0
+var gathered_nodes: Dictionary = {}
 
 const WALLS := [Vector2i(0,0), Vector2i(1,0), Vector2i(2,0), Vector2i(3,0), Vector2i(4,0), Vector2i(5,0), Vector2i(6,0), Vector2i(7,0), Vector2i(8,0), Vector2i(9,0), Vector2i(10,0), Vector2i(11,0), Vector2i(12,0), Vector2i(13,0), Vector2i(14,0), Vector2i(15,0), Vector2i(16,0), Vector2i(17,0), Vector2i(18,0), Vector2i(19,0), Vector2i(20,0), Vector2i(0,1), Vector2i(20,1), Vector2i(0,2), Vector2i(20,2), Vector2i(0,3), Vector2i(20,3), Vector2i(0,4), Vector2i(20,4), Vector2i(0,5), Vector2i(20,5), Vector2i(0,6), Vector2i(20,6), Vector2i(0,7), Vector2i(20,7), Vector2i(0,8), Vector2i(20,8), Vector2i(0,9), Vector2i(20,9), Vector2i(0,10), Vector2i(20,10), Vector2i(0,11), Vector2i(20,11), Vector2i(0,12), Vector2i(1,12), Vector2i(2,12), Vector2i(3,12), Vector2i(4,12), Vector2i(5,12), Vector2i(6,12), Vector2i(7,12), Vector2i(8,12), Vector2i(9,12), Vector2i(10,12), Vector2i(11,12), Vector2i(12,12), Vector2i(13,12), Vector2i(14,12), Vector2i(15,12), Vector2i(16,12), Vector2i(17,12), Vector2i(18,12), Vector2i(19,12), Vector2i(20,12)]
 
@@ -185,6 +186,7 @@ func _new_game() -> void:
 	contract_complete = false
 	contract_paid = false
 	explored.clear()
+	gathered_nodes.clear()
 	_mark_seen()
 	_log("You arrive at the Greyfen watchpost.")
 	_set_message("Find the scout. Something prowls in the eastern marsh.")
@@ -423,6 +425,8 @@ func _interact() -> void:
 				_set_message("Scout: The road west is clear. Good luck.")
 			else:
 				_set_message("Scout: The scavenger is still out there. East of the cache.")
+		"herbs", "scrap":
+			_gather_resource(nearby)
 		"cache":
 			if cache_open:
 				_set_message("The supply chest is empty.")
@@ -448,8 +452,34 @@ func _interact() -> void:
 		_:
 			_set_message("Nothing nearby answers your call.")
 
+func _resource_node_positions() -> Dictionary:
+	var herb_nodes := [Vector2i(10, 3), Vector2i(9, 3), Vector2i(11, 3)]
+	var scrap_nodes := [Vector2i(12, 9), Vector2i(12, 8), Vector2i(10, 9)]
+	return {"herbs": herb_nodes[region_index], "scrap": scrap_nodes[region_index]}
+
+func _resource_node_id(resource: String) -> String:
+	return "%d:%s" % [region_index, resource]
+
+func _gather_resource(resource: String) -> void:
+	var node_id := _resource_node_id(resource)
+	if gathered_nodes.has(node_id):
+		_set_message("This patch has already been gathered in this region.")
+		return
+	gathered_nodes[node_id] = true
+	if resource == "herbs":
+		herbs += 2
+		_set_message("You gather two bundles of marsh herbs.")
+		_log("Foraging: +2 herbs.")
+	else:
+		scrap += 2
+		_set_message("You salvage two pieces of usable scrap.")
+		_log("Salvage: +2 scrap.")
+	_advance_turn()
+
 func _nearest_landmark() -> String:
-	var options := {"scout": scout_pos, "cache": cache_pos, "exit": exit_pos}
+	var nodes := _resource_node_positions()
+	var options := {"scout": scout_pos, "cache": cache_pos, "exit": exit_pos,
+		"herbs": nodes["herbs"], "scrap": nodes["scrap"]}
 	var best := ""
 	var best_distance := 99
 	for key in options:
@@ -564,7 +594,8 @@ func _save_game() -> void:
 		"enemy_alive": enemy_alive, "cache_open": cache_open,
 		"contract_accepted": contract_accepted, "contract_complete": contract_complete,
 		"contract_paid": contract_paid, "region_index": region_index,
-		"herbs": herbs, "scrap": scrap, "explored": explored
+		"herbs": herbs, "scrap": scrap, "explored": explored,
+		"gathered_nodes": gathered_nodes
 	}
 	if SaveSystem.write(data):
 		_set_message("Game saved.")
@@ -616,6 +647,8 @@ func _load_game() -> void:
 	scrap = maxi(0, int(data.get("scrap", 0)))
 	var saved_explored: Variant = data.get("explored", {})
 	explored = saved_explored if saved_explored is Dictionary else {}
+	var saved_nodes: Variant = data.get("gathered_nodes", {})
+	gathered_nodes = saved_nodes if saved_nodes is Dictionary else {}
 	screen = Screen.WORLD
 	_mark_seen()
 	_set_message("Expedition restored.")
@@ -683,6 +716,11 @@ func _draw_world() -> void:
 	_draw_landmark(scout_pos, Color("#c2ad79"), "S")
 	_draw_landmark(cache_pos, Color("#b58b55") if not cache_open else Color("#635943"), "C")
 	_draw_landmark(exit_pos, Color("#8caa91"), "W")
+	var nodes := _resource_node_positions()
+	var herb_id := _resource_node_id("herbs")
+	var scrap_id := _resource_node_id("scrap")
+	_draw_landmark(nodes["herbs"], Color("#7f9b68") if not gathered_nodes.has(herb_id) else Color("#465447"), "H" if not gathered_nodes.has(herb_id) else ".")
+	_draw_landmark(nodes["scrap"], Color("#8c9290") if not gathered_nodes.has(scrap_id) else Color("#465447"), "M" if not gathered_nodes.has(scrap_id) else ".")
 	if enemy_alive:
 		_draw_actor(enemy_pos, Color("#a95e49"), "!")
 		_text("%s  %d/%d" % [enemy_name, enemy_hp, enemy_max_hp], _screen_pos(enemy_pos) + Vector2(-24, -12), 11, Color("#f0c5a8"))
