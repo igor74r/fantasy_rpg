@@ -13,6 +13,9 @@ Run from a clean Godot 4.3+ editor using F6 or F5.
 - [ ] Fight the first creature with standard attacks and verify stamina cost.
 - [ ] Use a heavy attack and verify its higher damage and stamina cost.
 - [ ] Guard and verify stamina recovery plus reduced incoming damage.
+- [ ] Lure an enemy adjacent; verify its committed attack is telegraphed for one turn before it resolves.
+- [ ] Verify Road Wight stamina drain and Cistern Brute/Ashen Knight bleeding effects.
+- [ ] Save while an enemy is winding up; reload and verify the intent is preserved.
 - [ ] Defeat both creatures; verify the second enemy uses the region's configured name, health, and power.
 - [ ] Verify XP, crowns, and level-up rewards are granted for each defeated creature.
 - [ ] Earn a skill point, open disciplines with K, and train Iron Vitality, Weapon Mastery, and Stone Bulwark with 1/2/3.

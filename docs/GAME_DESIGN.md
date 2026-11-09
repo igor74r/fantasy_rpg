@@ -11,7 +11,7 @@ A compact, self-contained expedition around the ruined watchpost of Greyfen:
 - Start a new run or load a local save.
 - Explore a bounded wilderness map from a top-down perspective.
 - Move one tile per action; hostile creatures react after player actions.
-- Engage a Marsh Scavenger and then a tougher Mire Stalker with attack, heavy attack, guard, and stamina management.
+- Engage a Marsh Scavenger and then a tougher Mire Stalker with attack, heavy attack, guard, telegraphed attacks, and stamina management.
 - Gain experience and levels; level-ups increase maximum health and stamina.
 - Loot improved weapon and armor from the supply cache; armor reduces incoming damage.
 - Survive bleeding wounds with bandages and healing draughts.
@@ -41,6 +41,7 @@ A compact, self-contained expedition around the ruined watchpost of Greyfen:
 - Quartermaster trading converts crowns into healing draughts or bandage bundles near the scout.
 - Field crafting converts herbs and scrap into draughts or bandages. Caches replenish materials in each region.
 - Successful skill training, quartermaster purchases, and field crafting consume a world turn, preserving the same enemy-response rule as movement and combat.
+- Adjacent enemies telegraph a committed attack one turn before resolving it. Road Wights drain stamina on a hit; Cistern Brutes and Ashen Knights can inflict bleeding. Enemy intent and archetype survive save/load.
 - Save format version 3 stores region, crafting resources, explored map cells, and discipline ranks while accepting version-1 and version-2 saves.
 
 ## Design boundaries

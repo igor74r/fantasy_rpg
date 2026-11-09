@@ -52,6 +52,24 @@ func _run_smoke_tests() -> void:
 	game._buy_skill(0)
 	assert(game.vitality_rank == 2 and game.skill_points == 1, "mastered discipline cannot consume points")
 
+	game.player = Vector2i(5, 5)
+	game.enemy_pos = Vector2i(6, 5)
+	game.enemy_alive = true
+	game.enemy_windup = false
+	game.enemy_style = "drainer"
+	game.enemy_power = 5
+	game.player_hp = game.player_max_hp
+	game.stamina = 6
+	var hp_before_windup := game.player_hp
+	game._advance_turn()
+	assert(game.enemy_windup and game.player_hp == hp_before_windup, "adjacent enemy telegraphs before attacking")
+	game.player_guard = true
+	game._advance_turn()
+	assert(not game.enemy_windup, "enemy resolves its telegraphed attack on the following turn")
+	assert(game.stamina <= 6, "drainer archetype keeps stamina within bounds")
+	game.enemy_style = "crusher"
+	game.enemy_windup = false
+	game.player_guard = false
 	game.enemy_phase = 0
 	game.enemy_name = "MARSH SCAVENGER"
 	game.enemy_alive = true
@@ -79,6 +97,8 @@ func _run_smoke_tests() -> void:
 	assert(int(restored.get("vitality_rank", 0)) == 2, "vitality rank survives save/load")
 	assert(int(restored.get("weapon_rank", 0)) == 1, "weapon rank survives save/load")
 	assert(int(restored.get("bulwark_rank", 0)) == 1, "bulwark rank survives save/load")
+	assert(bool(restored.get("enemy_windup", false)) == game.enemy_windup, "enemy intent persists in save data")
+	assert(str(restored.get("enemy_style", "")) == game.enemy_style, "enemy archetype persists in save data")
 
 	for legacy_version in [1, 2]:
 		var legacy_config := ConfigFile.new()

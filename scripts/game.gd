@@ -37,6 +37,8 @@ var enemy_power := 5
 var enemy_phase := 0
 var enemy_alive := true
 var enemy_guard := false
+var enemy_windup := false
+var enemy_style := "bleeder"
 var player_guard := false
 var cache_open := false
 var contract_accepted := false
@@ -175,6 +177,8 @@ func _new_game() -> void:
 	enemy_phase = 0
 	enemy_alive = true
 	enemy_guard = false
+	enemy_windup = false
+	enemy_style = "bleeder"
 	player_guard = false
 	cache_open = false
 	contract_accepted = false
@@ -216,19 +220,32 @@ func _advance_turn() -> void:
 	if enemy_alive:
 		var distance := absi(enemy_pos.x - player.x) + absi(enemy_pos.y - player.y)
 		if distance <= 1:
-			if CombatRules.hit_chance(0.88):
-				var damage := CombatRules.enemy_damage(enemy_power, player_guard, armor_defense)
-				player_hp -= damage
-				_log("%s hits you for %d." % [enemy_name.capitalize(), damage])
-				if enemy_power >= 7 and randf() < 0.28:
-					bleed_turns = maxi(bleed_turns, 3)
-					_log("The wound starts bleeding.")
+			if not enemy_windup:
+				enemy_windup = true
+				_log("%s prepares a committed attack. Guard or strike first." % enemy_name.capitalize())
+				_set_message("%s is winding up an attack — guard now!" % enemy_name.capitalize())
 			else:
-				_log("The scavenger misses.")
-			if player_hp <= 0:
-				player_hp = 0
-				screen = Screen.DEAD
-				_log("You collapse in the reeds.")
+				enemy_windup = false
+				if CombatRules.hit_chance(0.88):
+					var damage := CombatRules.enemy_damage(enemy_power, player_guard, armor_defense)
+					player_hp -= damage
+					_log("%s hits you for %d." % [enemy_name.capitalize(), damage])
+					if enemy_style == "drainer":
+						var drained := mini(stamina, 2)
+						stamina -= drained
+						_log("The revenant drains %d stamina." % drained)
+					elif enemy_style == "crusher" and randf() < 0.4:
+						bleed_turns = maxi(bleed_turns, 3)
+						_log("The crushing blow opens a bleeding wound.")
+					elif enemy_power >= 7 and randf() < 0.28:
+						bleed_turns = maxi(bleed_turns, 3)
+						_log("The wound starts bleeding.")
+				else:
+					_log("%s misses." % enemy_name.capitalize())
+				if player_hp <= 0:
+					player_hp = 0
+					screen = Screen.DEAD
+					_log("You collapse in the reeds.")
 		elif distance <= 7:
 			var step := Vector2i(signi(player.x - enemy_pos.x), signi(player.y - enemy_pos.y))
 			var candidate := enemy_pos + step
@@ -287,6 +304,8 @@ func _heavy_attack() -> void:
 
 func _resolve_enemy_defeat() -> void:
 	enemy_hp = 0
+	enemy_windup = false
+	enemy_guard = false
 	coins += 6 + enemy_phase * 5
 	experience += 35 + enemy_phase * 25
 	_log("%s falls. You gain experience and loot." % enemy_name.capitalize())
@@ -298,6 +317,8 @@ func _resolve_enemy_defeat() -> void:
 		enemy_hp = _region_second_hp()
 		enemy_max_hp = _region_second_hp()
 		enemy_power = _region_second_power()
+		enemy_style = _region_second_style()
+		enemy_windup = false
 		enemy_alive = true
 		_set_message("A larger shape rises from the black water!")
 		_log("%s emerges from the mire." % enemy_name.capitalize())
@@ -458,6 +479,9 @@ func _region_second_hp() -> int:
 func _region_second_power() -> int:
 	return [7, 8, 10][region_index]
 
+func _region_second_style() -> String:
+	return ["bleeder", "drainer", "crusher"][region_index]
+
 func _advance_region() -> void:
 	if region_index >= 2:
 		screen = Screen.COMPLETE
@@ -481,11 +505,13 @@ func _advance_region() -> void:
 			enemy_hp = 23
 			enemy_max_hp = 23
 			enemy_power = 6
+			enemy_style = "drainer"
 		2:
 			enemy_name = "ASHEN KNIGHT"
 			enemy_hp = 29
 			enemy_max_hp = 29
 			enemy_power = 8
+			enemy_style = "crusher"
 	_mark_seen()
 	_log("Expedition enters %s." % _region_name().capitalize())
 	_set_message("New frontier: %s. Find its scout and prepare for the hunt." % _region_name().capitalize())
@@ -533,6 +559,7 @@ func _save_game() -> void:
 		"vitality_rank": vitality_rank, "weapon_rank": weapon_rank, "bulwark_rank": bulwark_rank,
 		"bleed_turns": bleed_turns, "enemy_phase": enemy_phase,
 		"enemy_name": enemy_name, "enemy_max_hp": enemy_max_hp, "enemy_power": enemy_power,
+		"enemy_style": enemy_style, "enemy_windup": enemy_windup,
 		"enemy_pos": [enemy_pos.x, enemy_pos.y], "enemy_hp": enemy_hp,
 		"enemy_alive": enemy_alive, "cache_open": cache_open,
 		"contract_accepted": contract_accepted, "contract_complete": contract_complete,
@@ -575,6 +602,8 @@ func _load_game() -> void:
 	enemy_name = str(data.get("enemy_name", "MARSH SCAVENGER"))
 	enemy_max_hp = int(data.get("enemy_max_hp", 18))
 	enemy_power = int(data.get("enemy_power", 5))
+	enemy_style = str(data.get("enemy_style", "bleeder"))
+	enemy_windup = bool(data.get("enemy_windup", false))
 	turn = int(data.get("turn", 0))
 	enemy_hp = int(data.get("enemy_hp", 18))
 	enemy_alive = bool(data.get("enemy_alive", true))
@@ -694,6 +723,8 @@ func _draw_hud() -> void:
 	var quest := "Find the scout" if not contract_accepted else ("Return to scout" if contract_complete and not contract_paid else ("Settled" if contract_paid else "Slay the scavenger"))
 	_text(quest, Vector2(1030, 388), 14, Color("#b8c5ae"))
 	_text("SKILL POINTS %d  [K]" % skill_points, Vector2(1030, 410), 13, Color("#d5c48d"))
+	if enemy_alive and enemy_windup:
+		_text("ENEMY WINDING UP!", Vector2(1030, 432), 12, Color("#d17c62"))
 	_text("FIELD NOTES", Vector2(1030, 438), 14, Color("#d6c99e"))
 	for i in range(combat_log.size()):
 		_text(combat_log[i], Vector2(1030, 465 + i * 25), 11, Color("#aab5a3"))
@@ -731,6 +762,8 @@ func _draw_help() -> void:
 	draw_rect(Rect2(270, 130, 740, 470), Color("#a18f65"), false, 2)
 	_text("FIELD MANUAL", Vector2(320, 190), 30, Color("#d7c99e"))
 	var lines := ["Move one tile at a time. Every action gives nearby enemies a turn.",
+		"Adjacent enemies telegraph committed attacks before striking — guard during the wind-up.",
+		"Road Wights drain stamina; Cistern Brutes and Ashen Knights can cause bleeding.",
 		"SPACE attacks an adjacent foe. Attacks cost 2 stamina.",
 		"G guards and restores stamina; H heals, B dresses bleeding wounds.",
 		"V performs a heavy strike for 4 stamina. Armor reduces incoming damage.",
