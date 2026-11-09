@@ -11,7 +11,7 @@ A top-down, turn-based dark-fantasy survival RPG built with Godot 4.x and GDScri
 - Equipment: find a Fen-forged sword and Marshguard coat in the supply cache.
 - Survival: bleeding wounds, healing draughts, bandages, and stamina recovery.
 - Three linked regions: Greyfen Marsh, the Drowned Road, and Old Ironroot Mine, with escalating encounters and regional contracts.
-- Quartermaster trading near the scout (`T`) and field crafting (`C`) from herbs and scrap found in supply caches.
+- Regional foraging and salvage: gather herbs and scrap from marked field nodes once per region with `E`; nodes remain depleted after saving/loading. Quartermaster trading near the scout (`T`) and field crafting (`C`) turn those materials into supplies.
 - Persistent region, crafting materials, inventory, and progression; version-3 saves accept older version-1 and version-2 saves.
 
 ## Run
