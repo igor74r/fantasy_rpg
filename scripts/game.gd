@@ -345,6 +345,9 @@ func _buy_skill(index: int) -> void:
 			bulwark_rank += 1
 			armor_defense += 1
 			_log("Stone Bulwark rank %d: armor defense +1." % bulwark_rank)
+		_:
+			_set_message("Unknown discipline.")
+			return
 	skill_points -= 1
 	_set_message("Training acquired. Your discipline grows stronger.")
 	_advance_turn()

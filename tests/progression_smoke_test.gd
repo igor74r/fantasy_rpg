@@ -46,6 +46,9 @@ func _run_smoke_tests() -> void:
 	assert(game.potions == potions_before_craft + 1 and game.herbs == 0 and game.scrap == 0, "field crafting consumes its ingredients")
 	assert(game.turn == turn_before_craft + 1, "successful crafting consumes a world turn")
 	game.skill_points = 1
+	var turn_before_invalid_training := game.turn
+	game._buy_skill(99)
+	assert(game.skill_points == 1 and game.turn == turn_before_invalid_training, "invalid discipline cannot spend a point or consume a turn")
 	game._buy_skill(0)
 	assert(game.vitality_rank == 2 and game.skill_points == 1, "mastered discipline cannot consume points")
 
@@ -66,14 +69,12 @@ func _run_smoke_tests() -> void:
 	assert(game.enemy_phase == 0 and game.enemy_alive, "new region resets encounter phase")
 	assert(game.vitality_rank == 2 and game.weapon_rank == 1 and game.bulwark_rank == 1, "disciplines persist between regions")
 
-	var saved_data := {
-		"vitality_rank": game.vitality_rank,
-		"weapon_rank": game.weapon_rank,
-		"bulwark_rank": game.bulwark_rank,
-		"player_max_hp": game.player_max_hp,
-		"armor_defense": game.armor_defense
-	}
-	assert(SaveSystem.write(saved_data), "version-three save writes successfully")
+	game._save_game()
+	game.vitality_rank = 0
+	game.weapon_rank = 0
+	game.bulwark_rank = 0
+	game._load_game()
+	assert(game.vitality_rank == 2 and game.weapon_rank == 1 and game.bulwark_rank == 1, "game save/load restores all discipline ranks")
 	var restored: Dictionary = SaveSystem.read()
 	assert(int(restored.get("vitality_rank", 0)) == 2, "vitality rank survives save/load")
 	assert(int(restored.get("weapon_rank", 0)) == 1, "weapon rank survives save/load")
@@ -87,6 +88,8 @@ func _run_smoke_tests() -> void:
 		var legacy_data: Dictionary = SaveSystem.read()
 		assert(int(legacy_data.get("skill_points", 0)) == 2, "version-%d save remains readable" % legacy_version)
 		assert(not legacy_data.has("weapon_rank"), "legacy save defaults new discipline ranks")
+		game._load_game()
+		assert(game.vitality_rank == 0 and game.weapon_rank == 0 and game.bulwark_rank == 0, "version-%d load defaults new discipline ranks" % legacy_version)
 
 	game.queue_free()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://ashen_marches.save"))
