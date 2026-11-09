@@ -802,14 +802,14 @@ func _draw_help() -> void:
 	_text("FIELD MANUAL", Vector2(320, 190), 30, Color("#d7c99e"))
 	var lines := ["Every move or action advances nearby enemies by one turn.",
 		"Adjacent foes telegraph attacks; guard or strike before impact.",
-		"Road Wights/Cistern Brutes drain stamina; Ashen Knights/Hollow Revenants cause wounds.",
+		"Road Wights/Cistern Brutes drain stamina; Ashen Knights/Hollow Revenants cause bleeding.",
 		"SPACE attacks (2 stamina); V performs a heavy strike (4 stamina).",
 		"G guards and restores stamina; H heals; B stops bleeding.",
 		"Find the cache for a better blade, armor, draughts, and bandages.",
-		"Gather the H herb patch and M salvage site with E: two materials each, once per region.",
-		"Gathered field nodes stay depleted after saving/loading; use C to craft supplies.",
+		"Gather H herbs and M scrap with E: two units each, once per region.",
+		"Depleted nodes stay empty after loading; use C to craft supplies.",
 		"Accept the scout's contract, defeat both creatures, then return for your reward.",
-		"T trades near the scout. I opens your pack; K opens disciplines (1/2/3 to train).",
+		"T trades near the scout. I opens your pack; K opens skills (1/2/3 to train).",
 		"F5 saves; F9 loads. ESC closes this page; F1 opens the manual."]
 	for i in range(lines.size()):
 		_text(lines[i], Vector2(320, 245 + i * 28), 15, Color("#c3c0a9"))
