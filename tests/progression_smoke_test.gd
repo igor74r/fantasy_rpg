@@ -104,10 +104,15 @@ func _run_smoke_tests() -> void:
 	assert(game.region_index == 1, "campaign advances to second region")
 	assert(game.enemy_phase == 0 and game.enemy_alive, "new region resets encounter phase")
 	assert(game.vitality_rank == 2 and game.weapon_rank == 1 and game.bulwark_rank == 1, "disciplines persist between regions")
+	assert(game._resource_node_id("herbs") == "1:herbs", "resource node identity changes with the region")
+	var second_region_herbs_before := game.herbs
+	var second_region_herb_node: Vector2i = game._resource_node_positions()["herbs"]
+	game.player = second_region_herb_node + Vector2i.LEFT
+	game._interact()
+	assert(game.herbs == second_region_herbs_before + 2 and game.gathered_nodes.has("1:herbs"), "new region provides its own harvestable herb patch")
 
 	game.enemy_windup = true
 	game.enemy_style = "drainer"
-	game.gathered_nodes["1:herbs"] = true
 	game._save_game()
 	game.enemy_windup = false
 	game.enemy_style = "bleeder"
