@@ -60,13 +60,14 @@ func _run_smoke_tests() -> void:
 	game.enemy_power = 5
 	game.player_hp = game.player_max_hp
 	game.stamina = 6
+	seed(42)
 	var hp_before_windup := game.player_hp
 	game._advance_turn()
 	assert(game.enemy_windup and game.player_hp == hp_before_windup, "adjacent enemy telegraphs before attacking")
 	game.player_guard = true
 	game._advance_turn()
 	assert(not game.enemy_windup, "enemy resolves its telegraphed attack on the following turn")
-	assert(game.stamina <= 6, "drainer archetype keeps stamina within bounds")
+	assert(game.stamina == 5, "Road Wight drains two stamina after a hit, then turn recovery restores one")
 	game.enemy_style = "crusher"
 	game.enemy_windup = false
 	game.player_guard = false
@@ -87,12 +88,17 @@ func _run_smoke_tests() -> void:
 	assert(game.enemy_phase == 0 and game.enemy_alive, "new region resets encounter phase")
 	assert(game.vitality_rank == 2 and game.weapon_rank == 1 and game.bulwark_rank == 1, "disciplines persist between regions")
 
+	game.enemy_windup = true
+	game.enemy_style = "drainer"
 	game._save_game()
+	game.enemy_windup = false
+	game.enemy_style = "bleeder"
 	game.vitality_rank = 0
 	game.weapon_rank = 0
 	game.bulwark_rank = 0
 	game._load_game()
 	assert(game.vitality_rank == 2 and game.weapon_rank == 1 and game.bulwark_rank == 1, "game save/load restores all discipline ranks")
+	assert(game.enemy_windup and game.enemy_style == "drainer", "game save/load restores enemy intent and archetype")
 	var restored: Dictionary = SaveSystem.read()
 	assert(int(restored.get("vitality_rank", 0)) == 2, "vitality rank survives save/load")
 	assert(int(restored.get("weapon_rank", 0)) == 1, "weapon rank survives save/load")
