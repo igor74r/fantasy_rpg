@@ -41,7 +41,7 @@ A compact, self-contained expedition around the ruined watchpost of Greyfen:
 - Quartermaster trading converts crowns into healing draughts or bandage bundles near the scout.
 - Field crafting converts herbs and scrap into draughts or bandages. Caches replenish materials in each region.
 - Successful skill training, quartermaster purchases, and field crafting consume a world turn, preserving the same enemy-response rule as movement and combat.
-- Adjacent enemies telegraph a committed attack one turn before resolving it. Road Wights drain stamina on a hit; Cistern Brutes and Ashen Knights can inflict bleeding. Enemy intent and archetype survive save/load.
+- Adjacent enemies telegraph a committed attack one turn before resolving it. Road Wights and Cistern Brutes drain stamina on a hit; Ashen Knights and Hollow Revenants can inflict bleeding. Enemy intent and archetype survive save/load.
 - Save format version 3 stores region, crafting resources, explored map cells, and discipline ranks while accepting version-1 and version-2 saves.
 
 ## Design boundaries

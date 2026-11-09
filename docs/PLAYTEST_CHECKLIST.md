@@ -14,7 +14,7 @@ Run from a clean Godot 4.3+ editor using F6 or F5.
 - [ ] Use a heavy attack and verify its higher damage and stamina cost.
 - [ ] Guard and verify stamina recovery plus reduced incoming damage.
 - [ ] Lure an enemy adjacent; verify its committed attack is telegraphed for one turn before it resolves.
-- [ ] Verify Road Wight stamina drain and Cistern Brute/Ashen Knight bleeding effects.
+- [ ] Verify Road Wight/Cistern Brute stamina drain and Ashen Knight/Hollow Revenant bleeding effects.
 - [ ] Save while an enemy is winding up; reload and verify the intent is preserved.
 - [ ] Defeat both creatures; verify the second enemy uses the region's configured name, health, and power.
 - [ ] Verify XP, crowns, and level-up rewards are granted for each defeated creature.

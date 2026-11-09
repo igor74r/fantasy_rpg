@@ -233,7 +233,7 @@ func _advance_turn() -> void:
 					if enemy_style == "drainer":
 						var drained := mini(stamina, 2)
 						stamina -= drained
-						_log("The revenant drains %d stamina." % drained)
+						_log("The creature drains %d stamina." % drained)
 					elif enemy_style == "crusher" and randf() < 0.4:
 						bleed_turns = maxi(bleed_turns, 3)
 						_log("The crushing blow opens a bleeding wound.")
@@ -725,9 +725,9 @@ func _draw_hud() -> void:
 	_text("SKILL POINTS %d  [K]" % skill_points, Vector2(1030, 410), 13, Color("#d5c48d"))
 	if enemy_alive and enemy_windup:
 		_text("ENEMY WINDING UP!", Vector2(1030, 432), 12, Color("#d17c62"))
-	_text("FIELD NOTES", Vector2(1030, 438), 14, Color("#d6c99e"))
+	_text("FIELD NOTES", Vector2(1030, 458), 14, Color("#d6c99e"))
 	for i in range(combat_log.size()):
-		_text(combat_log[i], Vector2(1030, 465 + i * 25), 11, Color("#aab5a3"))
+		_text(combat_log[i], Vector2(1030, 483 + i * 25), 11, Color("#aab5a3"))
 	draw_rect(Rect2(24, 620, 950, 54), Color("#18241f"))
 	draw_rect(Rect2(24, 620, 950, 54), Color("#52614f"), false, 1)
 	_text(message, Vector2(42, 653), 15, Color("#e1d7b7"))
@@ -763,7 +763,7 @@ func _draw_help() -> void:
 	_text("FIELD MANUAL", Vector2(320, 190), 30, Color("#d7c99e"))
 	var lines := ["Move one tile at a time. Every action gives nearby enemies a turn.",
 		"Adjacent enemies telegraph committed attacks before striking — guard during the wind-up.",
-		"Road Wights drain stamina; Cistern Brutes and Ashen Knights can cause bleeding.",
+		"Road Wights and Cistern Brutes drain stamina; Ashen Knights and Hollow Revenants can cause bleeding.",
 		"SPACE attacks an adjacent foe. Attacks cost 2 stamina.",
 		"G guards and restores stamina; H heals, B dresses bleeding wounds.",
 		"V performs a heavy strike for 4 stamina. Armor reduces incoming damage.",
