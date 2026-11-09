@@ -11,7 +11,7 @@ A compact, self-contained expedition around the ruined watchpost of Greyfen:
 - Start a new run or load a local save.
 - Explore a bounded wilderness map from a top-down perspective.
 - Move one tile per action; hostile creatures react after player actions.
-- Engage a Marsh Scavenger and then a tougher Mire Stalker with attack, heavy attack, guard, and stamina management.
+- Engage a Marsh Scavenger and then a tougher Mire Stalker with attack, heavy attack, guard, telegraphed attacks, and stamina management.
 - Gain experience and levels; level-ups increase maximum health and stamina.
 - Loot improved weapon and armor from the supply cache; armor reduces incoming damage.
 - Survive bleeding wounds with bandages and healing draughts.
@@ -31,6 +31,8 @@ A compact, self-contained expedition around the ruined watchpost of Greyfen:
 - V: heavy attack
 - T: trade near the scout
 - C: craft with gathered materials
+- K: open disciplines and spend skill points with keys 1/2/3
+- F1: field manual
 - F5: save; F9: load
 - Esc: close a panel / return to menu
 
@@ -38,7 +40,20 @@ A compact, self-contained expedition around the ruined watchpost of Greyfen:
 - The campaign links Greyfen Marsh, the Drowned Road, and Old Ironroot Mine. Each region resets its local contract and cache while retaining character progression.
 - Quartermaster trading converts crowns into healing draughts or bandage bundles near the scout.
 - Field crafting converts herbs and scrap into draughts or bandages. Caches replenish materials in each region.
-- Save format version 2 stores region and crafting resources while accepting version-1 saves.
+- Successful skill training, quartermaster purchases, and field crafting consume a world turn, preserving the same enemy-response rule as movement and combat.
+- Adjacent enemies telegraph a committed attack one turn before resolving it. Road Wights and Cistern Brutes drain stamina on a hit; Ashen Knights and Hollow Revenants can inflict bleeding. Enemy intent and archetype survive save/load.
+- Save format version 3 stores region, crafting resources, explored map cells, and discipline ranks while accepting version-1 and version-2 saves.
 
 ## Design boundaries
 This is the first complete vertical slice, not the full commercial-scale game. Future systems can add deeper injury locations, additional equipment slots, larger procedural regions, more enemy archetypes, and richer dialogue without breaking the playable loop.
+
+
+## Regional foraging and salvage
+Each region contains one visible herb patch and one salvage site. Interact with an adjacent node using `E` to collect two matching materials; gathering consumes a world turn, so nearby enemies still react. A node can only be harvested once per region. Node positions vary by region, and depleted-node state is saved with the expedition. Herbs and scrap feed the existing field-crafting recipes, making exploration a repeatable strategic choice without renewable resource exploits.
+
+## Character disciplines (save format version 3)
+Level-ups award one spendable skill point. The K panel offers three passive disciplines, each capped at rank 2:
+- Iron Vitality: +5 maximum health per rank, immediately restoring the same amount.
+- Weapon Mastery: +1 weapon damage per rank for standard and heavy attacks.
+- Stone Bulwark: +1 armor defense per rank.
+Ranks and spent points persist in version-3 saves; older saves default all ranks to zero. Starting a genuinely new expedition resets level, attributes, and discipline ranks.

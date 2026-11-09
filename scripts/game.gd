@@ -4,9 +4,9 @@ const TILE := 42
 const MAP_W := 21
 const MAP_H := 13
 const ORIGIN := Vector2(90, 68)
-const SAVE_VERSION := 1
+const SAVE_VERSION := 3
 
-enum Screen { MENU, WORLD, INVENTORY, HELP, DEAD, COMPLETE }
+enum Screen { MENU, WORLD, INVENTORY, SKILLS, HELP, DEAD, COMPLETE }
 
 var screen: Screen = Screen.MENU
 var player := Vector2i(3, 8)
@@ -24,6 +24,9 @@ var armor_defense := 1
 var experience := 0
 var level := 1
 var skill_points := 0
+var vitality_rank := 0
+var weapon_rank := 0
+var bulwark_rank := 0
 var bleed_turns := 0
 var turn := 0
 var enemy_pos := Vector2i(13, 6)
@@ -34,6 +37,8 @@ var enemy_power := 5
 var enemy_phase := 0
 var enemy_alive := true
 var enemy_guard := false
+var enemy_windup := false
+var enemy_style := "bleeder"
 var player_guard := false
 var cache_open := false
 var contract_accepted := false
@@ -47,6 +52,7 @@ var explored: Dictionary = {}
 var region_index := 0
 var herbs := 0
 var scrap := 0
+var gathered_nodes: Dictionary = {}
 
 const WALLS := [Vector2i(0,0), Vector2i(1,0), Vector2i(2,0), Vector2i(3,0), Vector2i(4,0), Vector2i(5,0), Vector2i(6,0), Vector2i(7,0), Vector2i(8,0), Vector2i(9,0), Vector2i(10,0), Vector2i(11,0), Vector2i(12,0), Vector2i(13,0), Vector2i(14,0), Vector2i(15,0), Vector2i(16,0), Vector2i(17,0), Vector2i(18,0), Vector2i(19,0), Vector2i(20,0), Vector2i(0,1), Vector2i(20,1), Vector2i(0,2), Vector2i(20,2), Vector2i(0,3), Vector2i(20,3), Vector2i(0,4), Vector2i(20,4), Vector2i(0,5), Vector2i(20,5), Vector2i(0,6), Vector2i(20,6), Vector2i(0,7), Vector2i(20,7), Vector2i(0,8), Vector2i(20,8), Vector2i(0,9), Vector2i(20,9), Vector2i(0,10), Vector2i(20,10), Vector2i(0,11), Vector2i(20,11), Vector2i(0,12), Vector2i(1,12), Vector2i(2,12), Vector2i(3,12), Vector2i(4,12), Vector2i(5,12), Vector2i(6,12), Vector2i(7,12), Vector2i(8,12), Vector2i(9,12), Vector2i(10,12), Vector2i(11,12), Vector2i(12,12), Vector2i(13,12), Vector2i(14,12), Vector2i(15,12), Vector2i(16,12), Vector2i(17,12), Vector2i(18,12), Vector2i(19,12), Vector2i(20,12)]
 
@@ -84,7 +90,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		queue_redraw()
 		return
 	if key.keycode == KEY_ESCAPE:
-		if screen == Screen.INVENTORY or screen == Screen.HELP:
+		if screen == Screen.INVENTORY or screen == Screen.SKILLS or screen == Screen.HELP:
 			screen = Screen.WORLD
 		else:
 			screen = Screen.MENU
@@ -97,6 +103,17 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			_use_potion()
 		elif key.keycode == KEY_B:
 			_use_bandage()
+		queue_redraw()
+		return
+	if screen == Screen.SKILLS:
+		if key.keycode == KEY_K or key.keycode == KEY_ESCAPE:
+			screen = Screen.WORLD
+		elif key.keycode == KEY_1:
+			_buy_skill(0)
+		elif key.keycode == KEY_2:
+			_buy_skill(1)
+		elif key.keycode == KEY_3:
+			_buy_skill(2)
 		queue_redraw()
 		return
 	if screen == Screen.HELP:
@@ -114,6 +131,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		KEY_I:
 			screen = Screen.INVENTORY
 			message = "Pack contents"
+		KEY_K:
+			screen = Screen.SKILLS
+			message = "Discipline and training"
 		KEY_H: _use_potion()
 		KEY_B: _use_bandage()
 		KEY_V: _heavy_attack()
@@ -130,6 +150,8 @@ func _new_game() -> void:
 	region_index = 0
 	herbs = 0
 	scrap = 0
+	player_max_hp = 30
+	max_stamina = 8
 	player_hp = player_max_hp
 	stamina = max_stamina
 	coins = 0
@@ -142,8 +164,12 @@ func _new_game() -> void:
 	experience = 0
 	level = 1
 	skill_points = 0
+	vitality_rank = 0
+	weapon_rank = 0
+	bulwark_rank = 0
 	bleed_turns = 0
 	turn = 0
+	combat_log.clear()
 	enemy_pos = Vector2i(13, 6)
 	enemy_hp = 18
 	enemy_max_hp = 18
@@ -152,12 +178,15 @@ func _new_game() -> void:
 	enemy_phase = 0
 	enemy_alive = true
 	enemy_guard = false
+	enemy_windup = false
+	enemy_style = "bleeder"
 	player_guard = false
 	cache_open = false
 	contract_accepted = false
 	contract_complete = false
 	contract_paid = false
 	explored.clear()
+	gathered_nodes.clear()
 	_mark_seen()
 	_log("You arrive at the Greyfen watchpost.")
 	_set_message("Find the scout. Something prowls in the eastern marsh.")
@@ -193,23 +222,37 @@ func _advance_turn() -> void:
 	if enemy_alive:
 		var distance := absi(enemy_pos.x - player.x) + absi(enemy_pos.y - player.y)
 		if distance <= 1:
-			if CombatRules.hit_chance(0.88):
-				var damage := CombatRules.enemy_damage(enemy_power, player_guard, armor_defense)
-				player_hp -= damage
-				_log("%s hits you for %d." % [enemy_name.capitalize(), damage])
-				if enemy_power >= 7 and randf() < 0.28:
-					bleed_turns = maxi(bleed_turns, 3)
-					_log("The wound starts bleeding.")
+			if not enemy_windup:
+				enemy_windup = true
+				_log("%s prepares a committed attack. Guard or strike first." % enemy_name.capitalize())
+				_set_message("%s is winding up an attack — guard now!" % enemy_name.capitalize())
 			else:
-				_log("The scavenger misses.")
-			if player_hp <= 0:
-				player_hp = 0
-				screen = Screen.DEAD
-				_log("You collapse in the reeds.")
+				enemy_windup = false
+				if CombatRules.hit_chance(0.88):
+					var damage := CombatRules.enemy_damage(enemy_power, player_guard, armor_defense)
+					player_hp -= damage
+					_log("%s hits you for %d." % [enemy_name.capitalize(), damage])
+					if enemy_style == "drainer":
+						var drained := mini(stamina, 2)
+						stamina -= drained
+						_log("The creature drains %d stamina." % drained)
+					elif enemy_style == "crusher" and randf() < 0.4:
+						bleed_turns = maxi(bleed_turns, 3)
+						_log("The crushing blow opens a bleeding wound.")
+					elif enemy_power >= 7 and randf() < 0.28:
+						bleed_turns = maxi(bleed_turns, 3)
+						_log("The wound starts bleeding.")
+				else:
+					_log("%s misses." % enemy_name.capitalize())
+				if player_hp <= 0:
+					player_hp = 0
+					screen = Screen.DEAD
+					_log("You collapse in the reeds.")
 		elif distance <= 7:
 			var step := Vector2i(signi(player.x - enemy_pos.x), signi(player.y - enemy_pos.y))
 			var candidate := enemy_pos + step
-			if not _blocked(candidate) and candidate != player and candidate != scout_pos and candidate != cache_pos:
+			var resource_nodes := _resource_node_positions()
+			if not _blocked(candidate) and candidate != player and candidate != scout_pos and candidate != cache_pos and candidate != resource_nodes["herbs"] and candidate != resource_nodes["scrap"]:
 				enemy_pos = candidate
 	if bleed_turns > 0 and player_hp > 0:
 		player_hp = maxi(0, player_hp - 1)
@@ -234,7 +277,7 @@ func _attack() -> void:
 		return
 	stamina -= 2
 	if CombatRules.hit_chance(0.9):
-		var damage := CombatRules.player_damage(7 + weapon_bonus, enemy_guard)
+		var damage := CombatRules.player_damage(7 + weapon_bonus + weapon_rank, enemy_guard)
 		enemy_hp -= damage
 		_log("You strike %s for %d." % [enemy_name.to_lower(), damage])
 	else:
@@ -255,7 +298,7 @@ func _heavy_attack() -> void:
 		_set_message("A heavy strike requires 4 stamina.")
 		return
 	stamina -= 4
-	var damage := CombatRules.player_damage(12 + weapon_bonus, enemy_guard)
+	var damage := CombatRules.player_damage(12 + weapon_bonus + weapon_rank, enemy_guard)
 	enemy_hp -= damage
 	_log("Heavy strike deals %d damage." % damage)
 	if enemy_hp <= 0:
@@ -264,6 +307,8 @@ func _heavy_attack() -> void:
 
 func _resolve_enemy_defeat() -> void:
 	enemy_hp = 0
+	enemy_windup = false
+	enemy_guard = false
 	coins += 6 + enemy_phase * 5
 	experience += 35 + enemy_phase * 25
 	_log("%s falls. You gain experience and loot." % enemy_name.capitalize())
@@ -275,6 +320,8 @@ func _resolve_enemy_defeat() -> void:
 		enemy_hp = _region_second_hp()
 		enemy_max_hp = _region_second_hp()
 		enemy_power = _region_second_power()
+		enemy_style = _region_second_style()
+		enemy_windup = false
 		enemy_alive = true
 		_set_message("A larger shape rises from the black water!")
 		_log("%s emerges from the mire." % enemy_name.capitalize())
@@ -295,6 +342,39 @@ func _check_level_up() -> void:
 		stamina = max_stamina
 		_log("LEVEL UP! You are now level %d." % level)
 		threshold = level * 50
+
+func _buy_skill(index: int) -> void:
+	if skill_points <= 0:
+		_set_message("No skill points available. Gain a level to earn one.")
+		return
+	match index:
+		0:
+			if vitality_rank >= 2:
+				_set_message("Iron Vitality is already mastered.")
+				return
+			vitality_rank += 1
+			player_max_hp += 5
+			player_hp = mini(player_max_hp, player_hp + 5)
+			_log("Iron Vitality rank %d: maximum health +5." % vitality_rank)
+		1:
+			if weapon_rank >= 2:
+				_set_message("Weapon Mastery is already mastered.")
+				return
+			weapon_rank += 1
+			_log("Weapon Mastery rank %d: weapon damage +1." % weapon_rank)
+		2:
+			if bulwark_rank >= 2:
+				_set_message("Stone Bulwark is already mastered.")
+				return
+			bulwark_rank += 1
+			armor_defense += 1
+			_log("Stone Bulwark rank %d: armor defense +1." % bulwark_rank)
+		_:
+			_set_message("Unknown discipline.")
+			return
+	skill_points -= 1
+	_set_message("Training acquired. Your discipline grows stronger.")
+	_advance_turn()
 
 func _use_bandage() -> void:
 	if bandages <= 0:
@@ -346,6 +426,8 @@ func _interact() -> void:
 				_set_message("Scout: The road west is clear. Good luck.")
 			else:
 				_set_message("Scout: The scavenger is still out there. East of the cache.")
+		"herbs", "scrap":
+			_gather_resource(nearby)
 		"cache":
 			if cache_open:
 				_set_message("The supply chest is empty.")
@@ -359,7 +441,7 @@ func _interact() -> void:
 				weapon_name = "Fen-forged sword"
 				weapon_bonus = 2
 				armor_name = "Marshguard coat"
-				armor_defense = 3
+				armor_defense = 3 + bulwark_rank
 				_set_message("You find a Fen-forged sword, Marshguard coat, draught and bandages.")
 				_log("Cache: upgraded weapon and armor, +1 draught, +2 bandages.")
 			_advance_turn()
@@ -371,8 +453,34 @@ func _interact() -> void:
 		_:
 			_set_message("Nothing nearby answers your call.")
 
+func _resource_node_positions() -> Dictionary:
+	var herb_nodes := [Vector2i(10, 3), Vector2i(9, 3), Vector2i(11, 3)]
+	var scrap_nodes := [Vector2i(12, 9), Vector2i(12, 8), Vector2i(10, 9)]
+	return {"herbs": herb_nodes[region_index], "scrap": scrap_nodes[region_index]}
+
+func _resource_node_id(resource: String) -> String:
+	return "%d:%s" % [region_index, resource]
+
+func _gather_resource(resource: String) -> void:
+	var node_id := _resource_node_id(resource)
+	if gathered_nodes.has(node_id):
+		_set_message("This patch has already been gathered in this region.")
+		return
+	gathered_nodes[node_id] = true
+	if resource == "herbs":
+		herbs += 2
+		_set_message("You gather two bundles of marsh herbs.")
+		_log("Foraging: +2 herbs.")
+	else:
+		scrap += 2
+		_set_message("You salvage two pieces of usable scrap.")
+		_log("Salvage: +2 scrap.")
+	_advance_turn()
+
 func _nearest_landmark() -> String:
-	var options := {"scout": scout_pos, "cache": cache_pos, "exit": exit_pos}
+	var nodes := _resource_node_positions()
+	var options := {"scout": scout_pos, "cache": cache_pos, "exit": exit_pos,
+		"herbs": nodes["herbs"], "scrap": nodes["scrap"]}
 	var best := ""
 	var best_distance := 99
 	for key in options:
@@ -402,6 +510,9 @@ func _region_second_hp() -> int:
 func _region_second_power() -> int:
 	return [7, 8, 10][region_index]
 
+func _region_second_style() -> String:
+	return ["bleeder", "drainer", "crusher"][region_index]
+
 func _advance_region() -> void:
 	if region_index >= 2:
 		screen = Screen.COMPLETE
@@ -425,11 +536,13 @@ func _advance_region() -> void:
 			enemy_hp = 23
 			enemy_max_hp = 23
 			enemy_power = 6
+			enemy_style = "drainer"
 		2:
 			enemy_name = "ASHEN KNIGHT"
 			enemy_hp = 29
 			enemy_max_hp = 29
 			enemy_power = 8
+			enemy_style = "crusher"
 	_mark_seen()
 	_log("Expedition enters %s." % _region_name().capitalize())
 	_set_message("New frontier: %s. Find its scout and prepare for the hunt." % _region_name().capitalize())
@@ -442,10 +555,12 @@ func _trade() -> void:
 		coins -= 8
 		potions += 1
 		_set_message("Quartermaster: one healing draught. Eight crowns.")
+		_advance_turn()
 	elif coins >= 6:
 		coins -= 6
 		bandages += 2
 		_set_message("Quartermaster: two bandages. Six crowns.")
+		_advance_turn()
 	else:
 		_set_message("A draught costs 8 crowns; two bandages cost 6.")
 
@@ -455,11 +570,13 @@ func _craft() -> void:
 		scrap -= 1
 		potions += 1
 		_set_message("You brew a field draught from marsh herbs and scrap.")
+		_advance_turn()
 	elif herbs >= 1 and scrap >= 1:
 		herbs -= 1
 		scrap -= 1
 		bandages += 1
 		_set_message("You bind a fresh bandage from gathered materials.")
+		_advance_turn()
 	else:
 		_set_message("Crafting needs herbs and scrap. Search each region's supply cache.")
 
@@ -469,13 +586,17 @@ func _save_game() -> void:
 		"coins": coins, "potions": potions, "bandages": bandages, "turn": turn,
 		"player_max_hp": player_max_hp, "max_stamina": max_stamina,
 		"weapon_name": weapon_name, "weapon_bonus": weapon_bonus, "armor_name": armor_name, "armor_defense": armor_defense,
-		"experience": experience, "level": level, "skill_points": skill_points, "bleed_turns": bleed_turns, "enemy_phase": enemy_phase,
+		"experience": experience, "level": level, "skill_points": skill_points,
+		"vitality_rank": vitality_rank, "weapon_rank": weapon_rank, "bulwark_rank": bulwark_rank,
+		"bleed_turns": bleed_turns, "enemy_phase": enemy_phase,
 		"enemy_name": enemy_name, "enemy_max_hp": enemy_max_hp, "enemy_power": enemy_power,
+		"enemy_style": enemy_style, "enemy_windup": enemy_windup,
 		"enemy_pos": [enemy_pos.x, enemy_pos.y], "enemy_hp": enemy_hp,
 		"enemy_alive": enemy_alive, "cache_open": cache_open,
 		"contract_accepted": contract_accepted, "contract_complete": contract_complete,
 		"contract_paid": contract_paid, "region_index": region_index,
-		"herbs": herbs, "scrap": scrap, "explored": explored
+		"herbs": herbs, "scrap": scrap, "explored": explored,
+		"gathered_nodes": gathered_nodes
 	}
 	if SaveSystem.write(data):
 		_set_message("Game saved.")
@@ -504,12 +625,17 @@ func _load_game() -> void:
 	armor_defense = int(data.get("armor_defense", 1))
 	experience = int(data.get("experience", 0))
 	level = int(data.get("level", 1))
-	skill_points = int(data.get("skill_points", 0))
+	skill_points = maxi(0, int(data.get("skill_points", 0)))
+	vitality_rank = clampi(int(data.get("vitality_rank", 0)), 0, 2)
+	weapon_rank = clampi(int(data.get("weapon_rank", 0)), 0, 2)
+	bulwark_rank = clampi(int(data.get("bulwark_rank", 0)), 0, 2)
 	bleed_turns = int(data.get("bleed_turns", 0))
 	enemy_phase = int(data.get("enemy_phase", 0))
 	enemy_name = str(data.get("enemy_name", "MARSH SCAVENGER"))
 	enemy_max_hp = int(data.get("enemy_max_hp", 18))
 	enemy_power = int(data.get("enemy_power", 5))
+	enemy_style = str(data.get("enemy_style", "bleeder"))
+	enemy_windup = bool(data.get("enemy_windup", false))
 	turn = int(data.get("turn", 0))
 	enemy_hp = int(data.get("enemy_hp", 18))
 	enemy_alive = bool(data.get("enemy_alive", true))
@@ -522,6 +648,8 @@ func _load_game() -> void:
 	scrap = maxi(0, int(data.get("scrap", 0)))
 	var saved_explored: Variant = data.get("explored", {})
 	explored = saved_explored if saved_explored is Dictionary else {}
+	var saved_nodes: Variant = data.get("gathered_nodes", {})
+	gathered_nodes = saved_nodes if saved_nodes is Dictionary else {}
 	screen = Screen.WORLD
 	_mark_seen()
 	_set_message("Expedition restored.")
@@ -545,6 +673,8 @@ func _draw() -> void:
 	_draw_hud()
 	if screen == Screen.INVENTORY:
 		_draw_inventory()
+	elif screen == Screen.SKILLS:
+		_draw_skills()
 	elif screen == Screen.HELP:
 		_draw_help()
 	elif screen == Screen.DEAD:
@@ -587,6 +717,11 @@ func _draw_world() -> void:
 	_draw_landmark(scout_pos, Color("#c2ad79"), "S")
 	_draw_landmark(cache_pos, Color("#b58b55") if not cache_open else Color("#635943"), "C")
 	_draw_landmark(exit_pos, Color("#8caa91"), "W")
+	var nodes := _resource_node_positions()
+	var herb_id := _resource_node_id("herbs")
+	var scrap_id := _resource_node_id("scrap")
+	_draw_landmark(nodes["herbs"], Color("#7f9b68") if not gathered_nodes.has(herb_id) else Color("#465447"), "H" if not gathered_nodes.has(herb_id) else ".")
+	_draw_landmark(nodes["scrap"], Color("#8c9290") if not gathered_nodes.has(scrap_id) else Color("#465447"), "M" if not gathered_nodes.has(scrap_id) else ".")
 	if enemy_alive:
 		_draw_actor(enemy_pos, Color("#a95e49"), "!")
 		_text("%s  %d/%d" % [enemy_name, enemy_hp, enemy_max_hp], _screen_pos(enemy_pos) + Vector2(-24, -12), 11, Color("#f0c5a8"))
@@ -626,44 +761,59 @@ func _draw_hud() -> void:
 	_text("CONTRACT", Vector2(1030, 360), 15, Color("#d6c99e"))
 	var quest := "Find the scout" if not contract_accepted else ("Return to scout" if contract_complete and not contract_paid else ("Settled" if contract_paid else "Slay the scavenger"))
 	_text(quest, Vector2(1030, 388), 14, Color("#b8c5ae"))
-	_text("FIELD NOTES", Vector2(1030, 430), 14, Color("#d6c99e"))
+	_text("SKILL POINTS %d  [K]" % skill_points, Vector2(1030, 410), 13, Color("#d5c48d"))
+	if enemy_alive and enemy_windup:
+		_text("ENEMY WINDING UP!", Vector2(1030, 432), 12, Color("#d17c62"))
+	_text("FIELD NOTES", Vector2(1030, 458), 14, Color("#d6c99e"))
 	for i in range(combat_log.size()):
-		_text(combat_log[i], Vector2(1030, 458 + i * 27), 11, Color("#aab5a3"))
+		_text(combat_log[i], Vector2(1030, 483 + i * 25), 11, Color("#aab5a3"))
 	draw_rect(Rect2(24, 620, 950, 54), Color("#18241f"))
 	draw_rect(Rect2(24, 620, 950, 54), Color("#52614f"), false, 1)
 	_text(message, Vector2(42, 653), 15, Color("#e1d7b7"))
-	_text("WASD MOVE • SPACE STRIKE • V HEAVY • G GUARD • E USE • I PACK • H HEAL • B BANDAGE • F5 SAVE", Vector2(24, 711), 12, Color("#9ba995"))
+	_text("WASD MOVE • SPACE STRIKE • V HEAVY • G GUARD • E USE • I PACK • K SKILLS • H HEAL • B BANDAGE • F5 SAVE", Vector2(24, 711), 12, Color("#9ba995"))
 
 func _draw_inventory() -> void:
-	draw_rect(Rect2(300, 170, 650, 390), Color("#1b2822"))
-	draw_rect(Rect2(300, 170, 650, 390), Color("#a18f65"), false, 2)
-	_text("TRAVELER'S PACK", Vector2(345, 225), 28, Color("#d7c99e"))
-	_text("Healing draughts     x%d" % potions, Vector2(350, 280), 20, Color("#a9c7aa"))
-	_text("Bandages             x%d" % bandages, Vector2(350, 315), 20, Color("#a9c7aa"))
-	_text("Weapon: %s  (+%d damage)" % [weapon_name, weapon_bonus], Vector2(350, 355), 18, Color("#d5c48d"))
-	_text("Armor: %s  (%d defense)" % [armor_name, armor_defense], Vector2(350, 390), 18, Color("#a9c7aa"))
-	_text("Level %d  •  XP %d / %d  •  Skill points %d" % [level, experience, level * 50, skill_points], Vector2(350, 430), 17, Color("#d7c99e"))
-	_text("Bleeding: %d turns" % bleed_turns, Vector2(350, 465), 16, Color("#c47c68"))
-	_text("Crowns               %d" % coins, Vector2(350, 340), 20, Color("#d5c48d"))
-	_text("Herbs %d  •  Scrap %d" % [herbs, scrap], Vector2(350, 410), 18, Color("#a9c7aa"))
-	_text("H: draught  •  B: bandage  •  I / ESC: close", Vector2(350, 520), 16, Color("#9ba995"))
+	draw_rect(Rect2(300, 135, 680, 450), Color("#1b2822"))
+	draw_rect(Rect2(300, 135, 680, 450), Color("#a18f65"), false, 2)
+	_text("TRAVELER'S PACK", Vector2(345, 190), 28, Color("#d7c99e"))
+	_text("Healing draughts     x%d" % potions, Vector2(350, 250), 18, Color("#a9c7aa"))
+	_text("Bandages             x%d" % bandages, Vector2(350, 282), 18, Color("#a9c7aa"))
+	_text("Weapon: %s  (+%d damage)" % [weapon_name, weapon_bonus + weapon_rank], Vector2(350, 316), 17, Color("#d5c48d"))
+	_text("Armor: %s  (%d defense)" % [armor_name, armor_defense], Vector2(350, 348), 17, Color("#a9c7aa"))
+	_text("Crowns %d  •  Herbs %d  •  Scrap %d" % [coins, herbs, scrap], Vector2(350, 382), 17, Color("#d5c48d"))
+	_text("Level %d  •  XP %d / %d  •  Skill points %d" % [level, experience, level * 50, skill_points], Vector2(350, 416), 16, Color("#d7c99e"))
+	_text("Bleeding: %d turns" % bleed_turns, Vector2(350, 450), 16, Color("#c47c68"))
+	_text("H: draught  •  B: bandage  •  I / ESC: close", Vector2(350, 535), 16, Color("#9ba995"))
+
+func _draw_skills() -> void:
+	draw_rect(Rect2(270, 145, 740, 430), Color("#1b2822"))
+	draw_rect(Rect2(270, 145, 740, 430), Color("#a18f65"), false, 2)
+	_text("DISCIPLINES", Vector2(320, 205), 30, Color("#d7c99e"))
+	_text("Unspent skill points: %d" % skill_points, Vector2(320, 245), 18, Color("#d5c48d"))
+	_text("[1] Iron Vitality  %d/2  — +5 maximum health per rank" % vitality_rank, Vector2(320, 305), 18, Color("#a9c7aa"))
+	_text("[2] Weapon Mastery  %d/2  — +1 weapon damage per rank" % weapon_rank, Vector2(320, 355), 18, Color("#d5c48d"))
+	_text("[3] Stone Bulwark  %d/2  — +1 armor defense per rank" % bulwark_rank, Vector2(320, 405), 18, Color("#a9c7aa"))
+	_text("Each level grants one point. Each discipline can be trained twice.", Vector2(320, 475), 15, Color("#c3c0a9"))
+	_text("Press 1 / 2 / 3 to train  •  K / ESC: close", Vector2(320, 530), 16, Color("#9ba995"))
 
 func _draw_help() -> void:
 	draw_rect(Rect2(270, 130, 740, 470), Color("#1b2822"))
 	draw_rect(Rect2(270, 130, 740, 470), Color("#a18f65"), false, 2)
 	_text("FIELD MANUAL", Vector2(320, 190), 30, Color("#d7c99e"))
-	var lines := ["Move one tile at a time. Every action gives nearby enemies a turn.",
-		"SPACE attacks an adjacent foe. Attacks cost 2 stamina.",
-		"G guards and restores stamina; H heals, B dresses bleeding wounds.",
-		"V performs a heavy strike for 4 stamina. Armor reduces incoming damage.",
-		"Find the cache for improved armor and a stronger blade. Defeat both creatures.",
-		"E interacts with the scout, cache, and western road.",
-		"Accept the scout's contract, defeat both creatures, then return.",
-		"F5 saves locally. F9 loads. I opens your pack.",
-		"ESC closes this page. F1 opens this manual."]
+	var lines := ["Every move or action advances nearby enemies by one turn.",
+		"Adjacent foes telegraph attacks; guard or strike before impact.",
+		"Road Wights/Cistern Brutes drain stamina; Ashen Knights/Hollow Revenants cause bleeding.",
+		"SPACE attacks (2 stamina); V performs a heavy strike (4 stamina).",
+		"G guards and restores stamina; H heals; B stops bleeding.",
+		"Find the cache for a better blade, armor, draughts, and bandages.",
+		"Gather H herbs and M scrap with E: two units each, once per region.",
+		"Depleted nodes stay empty after loading; use C to craft supplies.",
+		"Accept the scout's contract, defeat both creatures, then return for your reward.",
+		"T trades near the scout. I opens your pack; K opens skills (1/2/3 to train).",
+		"F5 saves; F9 loads. ESC closes this page; F1 opens the manual."]
 	for i in range(lines.size()):
-		_text(lines[i], Vector2(320, 255 + i * 38), 16, Color("#c3c0a9"))
-	_text("Press any key to return", Vector2(320, 550), 15, Color("#a9b99c"))
+		_text(lines[i], Vector2(320, 245 + i * 28), 15, Color("#c3c0a9"))
+	_text("Press any key to return", Vector2(320, 565), 15, Color("#a9b99c"))
 
 func _draw_overlay(title: String, subtitle: String, footer: String) -> void:
 	draw_rect(Rect2(220, 210, 840, 300), Color("#18231f"))
