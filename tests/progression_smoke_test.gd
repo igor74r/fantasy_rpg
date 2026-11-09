@@ -144,5 +144,5 @@ func _run_smoke_tests() -> void:
 
 	game.queue_free()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://ashen_marches.save"))
-	print("PASS: progression, disciplines, combat rewards, region transition, and save compatibility")
+	print("PASS: progression, foraging, salvage, combat rewards, region transitions, and save compatibility")
 	quit(0)
