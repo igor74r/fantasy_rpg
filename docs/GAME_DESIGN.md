@@ -48,6 +48,9 @@ A compact, self-contained expedition around the ruined watchpost of Greyfen:
 This is the first complete vertical slice, not the full commercial-scale game. Future systems can add deeper injury locations, additional equipment slots, larger procedural regions, more enemy archetypes, and richer dialogue without breaking the playable loop.
 
 
+## Regional foraging and salvage
+Each region contains one visible herb patch and one salvage site. Interact with an adjacent node using `E` to collect two matching materials; gathering consumes a world turn, so nearby enemies still react. A node can only be harvested once per region. Node positions vary by region, and depleted-node state is saved with the expedition. Herbs and scrap feed the existing field-crafting recipes, making exploration a repeatable strategic choice without renewable resource exploits.
+
 ## Character disciplines (save format version 3)
 Level-ups award one spendable skill point. The K panel offers three passive disciplines, each capped at rank 2:
 - Iron Vitality: +5 maximum health per rank, immediately restoring the same amount.
